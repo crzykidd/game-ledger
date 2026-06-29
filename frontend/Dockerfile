@@ -11,6 +11,8 @@ RUN pnpm install --frozen-lockfile
 COPY packages/contract ./packages/contract
 COPY frontend ./frontend
 
+# Build the shared contract package first — the frontend's tsc needs its dist/types.
+RUN pnpm --filter @game-ledger/contract build
 RUN pnpm --filter @game-ledger/frontend build
 
 FROM nginx:alpine
