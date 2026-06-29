@@ -6,7 +6,7 @@
     "dev": "nest start --watch",
     "build": "nest build",
     "lint": "eslint src --ext .ts",
-    "test": "jest",
+    "test": "jest --forceExit",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "prisma:generate": "prisma generate",
