@@ -324,7 +324,9 @@ describe('Play: start-game — count buttons and seat dropdowns', () => {
 
     // Wait for modules to load
     await waitFor(() => {
-      expect((screen.getByLabelText('Game') as HTMLSelectElement).options.length).toBeGreaterThan(1);
+      expect((screen.getByLabelText('Game') as HTMLSelectElement).options.length).toBeGreaterThan(
+        1,
+      );
     });
 
     // No count buttons yet
@@ -402,7 +404,9 @@ describe('Play: start-game — player dedupe', () => {
     );
 
     await waitFor(() => {
-      expect((screen.getByLabelText('Game') as HTMLSelectElement).options.length).toBeGreaterThan(1);
+      expect((screen.getByLabelText('Game') as HTMLSelectElement).options.length).toBeGreaterThan(
+        1,
+      );
     });
 
     await userEvent.selectOptions(screen.getByLabelText('Game'), 'skyjo');
@@ -495,7 +499,9 @@ describe('Play: start-game — playgroup pre-fill and submit', () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect((screen.getByLabelText('Game') as HTMLSelectElement).options.length).toBeGreaterThan(1);
+      expect((screen.getByLabelText('Game') as HTMLSelectElement).options.length).toBeGreaterThan(
+        1,
+      );
     });
 
     // Select Skyjo
@@ -573,7 +579,9 @@ describe('Play: start-game — Start disabled until all slots filled', () => {
     );
 
     await waitFor(() => {
-      expect((screen.getByLabelText('Game') as HTMLSelectElement).options.length).toBeGreaterThan(1);
+      expect((screen.getByLabelText('Game') as HTMLSelectElement).options.length).toBeGreaterThan(
+        1,
+      );
     });
 
     const startBtn = screen.getByRole('button', { name: 'Start game' });
@@ -2058,7 +2066,8 @@ function cribbagePreReleaseModuleInfo() {
 function renderStartGamePage(modulesPayload: unknown[]) {
   const fetchMock = vi.fn().mockImplementation(async (url: string) => {
     if (url === '/api/auth/me') return { ok: true, status: 200, json: async () => baseUser() };
-    if (url === '/api/players') return { ok: true, status: 200, json: async () => [basePlayer('p-1', 'alice')] };
+    if (url === '/api/players')
+      return { ok: true, status: 200, json: async () => [basePlayer('p-1', 'alice')] };
     if (url === '/api/playgroups') return { ok: true, status: 200, json: async () => [] };
     if (url === '/api/modules') return { ok: true, status: 200, json: async () => modulesPayload };
     return { ok: true, status: 200, json: async () => ({}) };
@@ -2196,8 +2205,18 @@ describe('Cribbage: CribbageCapture — live-pegging buttons', () => {
   function makeProps(overrides: Partial<Parameters<typeof CribbageCapture>[0]> = {}) {
     return {
       participations: [
-        { id: 'cp-1', seat: 0, player: { id: 'player-cp1', nickname: 'alice', userId: null }, scoreState: null },
-        { id: 'cp-2', seat: 1, player: { id: 'player-cp2', nickname: 'bob', userId: null }, scoreState: null },
+        {
+          id: 'cp-1',
+          seat: 0,
+          player: { id: 'player-cp1', nickname: 'alice', userId: null },
+          scoreState: null,
+        },
+        {
+          id: 'cp-2',
+          seat: 1,
+          player: { id: 'player-cp2', nickname: 'bob', userId: null },
+          scoreState: null,
+        },
       ],
       currentDeal: 1,
       saving: false,
@@ -2267,8 +2286,18 @@ describe('Cribbage: CribbageCapture — live-pegging buttons', () => {
 
 describe('Cribbage: CribbageCapture — dealer chip / crib label (live model)', () => {
   const participations = [
-    { id: 'sh-1', seat: 0, player: { id: 'player-sh1', nickname: 'alice', userId: null }, scoreState: null },
-    { id: 'sh-2', seat: 1, player: { id: 'player-sh2', nickname: 'bob', userId: null }, scoreState: null },
+    {
+      id: 'sh-1',
+      seat: 0,
+      player: { id: 'player-sh1', nickname: 'alice', userId: null },
+      scoreState: null,
+    },
+    {
+      id: 'sh-2',
+      seat: 1,
+      player: { id: 'player-sh2', nickname: 'bob', userId: null },
+      scoreState: null,
+    },
   ];
   const defaultProps = {
     participations,
@@ -2479,11 +2508,17 @@ describe('Play: ScoreForm — blank input → 0', () => {
             scoreStates: [
               {
                 participationId: 'part-1',
-                payload: { rounds: [{ round: 1, scores: { 'part-1': 0, 'part-2': 0 } }], totals: { 'part-1': 0, 'part-2': 0 } },
+                payload: {
+                  rounds: [{ round: 1, scores: { 'part-1': 0, 'part-2': 0 } }],
+                  totals: { 'part-1': 0, 'part-2': 0 },
+                },
               },
               {
                 participationId: 'part-2',
-                payload: { rounds: [{ round: 1, scores: { 'part-1': 0, 'part-2': 0 } }], totals: { 'part-1': 0, 'part-2': 0 } },
+                payload: {
+                  rounds: [{ round: 1, scores: { 'part-1': 0, 'part-2': 0 } }],
+                  totals: { 'part-1': 0, 'part-2': 0 },
+                },
               },
             ],
           }),

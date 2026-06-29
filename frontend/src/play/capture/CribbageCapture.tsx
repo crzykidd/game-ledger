@@ -191,9 +191,7 @@ export function CribbageCapture({
                     'disabled:opacity-35 disabled:cursor-not-allowed',
                   )}
                   value={addVal}
-                  onChange={(e) =>
-                    setAddValues((prev) => ({ ...prev, [p.id]: e.target.value }))
-                  }
+                  onChange={(e) => setAddValues((prev) => ({ ...prev, [p.id]: e.target.value }))}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();

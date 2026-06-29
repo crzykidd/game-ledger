@@ -48,9 +48,7 @@ describe('ModuleLoaderService.listModulesWithPlayCounts()', () => {
   });
 
   it('reports the correct count for a module the user has hosted N times', async () => {
-    const svc = await makeService([
-      { moduleKey: 'skyjo', _count: { _all: 5 } },
-    ]);
+    const svc = await makeService([{ moduleKey: 'skyjo', _count: { _all: 5 } }]);
 
     const modules = await svc.listModulesWithPlayCounts('user-1');
     const skyjo = modules.find((m) => m.id === 'skyjo');
@@ -60,9 +58,7 @@ describe('ModuleLoaderService.listModulesWithPlayCounts()', () => {
   });
 
   it('every returned module has a playCount field (additive, existing fields untouched)', async () => {
-    const svc = await makeService([
-      { moduleKey: 'uno', _count: { _all: 3 } },
-    ]);
+    const svc = await makeService([{ moduleKey: 'uno', _count: { _all: 3 } }]);
 
     const modules = await svc.listModulesWithPlayCounts('user-1');
 
@@ -105,9 +101,7 @@ describe('ModuleLoaderService.listModulesWithPlayCounts()', () => {
   });
 
   it('a module with no games reports 0 while a module with games reports its count', async () => {
-    const svc = await makeService([
-      { moduleKey: 'skyjo', _count: { _all: 9 } },
-    ]);
+    const svc = await makeService([{ moduleKey: 'skyjo', _count: { _all: 9 } }]);
 
     const modules = await svc.listModulesWithPlayCounts('user-1');
 

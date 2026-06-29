@@ -8,7 +8,11 @@
  *
  * For exportAll: PrismaService is mocked via a plain object; no live DB is needed.
  */
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   MaintenanceService,
@@ -43,9 +47,7 @@ const mockActor = { id: 'user-1' } as any;
  * Build a fake FsAdapter backed by an in-memory file list.
  * Returns the adapter and a mutable files array for test setup.
  */
-function makeFsAdapter(
-  initialFiles: Array<{ name: string; size: number; birthtime: Date }> = [],
-): {
+function makeFsAdapter(initialFiles: Array<{ name: string; size: number; birthtime: Date }> = []): {
   adapter: FsAdapter;
   files: Array<{ name: string; size: number; birthtime: Date }>;
   unlinkCalled: string[];
@@ -61,8 +63,7 @@ function makeFsAdapter(
       return files.some((f) => p.endsWith('/' + f.name) || p === f.name);
     },
     mkdirSync: jest.fn(),
-    readdirSync: (_dir: string) =>
-      files.map((f) => ({ isFile: () => true, name: f.name })),
+    readdirSync: (_dir: string) => files.map((f) => ({ isFile: () => true, name: f.name })),
     statSync: (p: string) => {
       const file = files.find((f) => p.endsWith('/' + f.name) || p === f.name);
       if (file) {
@@ -87,9 +88,7 @@ function makeFsAdapter(
  * Minimal mock for PrismaService. Provide only the model finders needed for the test.
  * Uses `as unknown as PrismaService` to satisfy TypeScript without implementing the full type.
  */
-function makePrismaService(
-  overrides: Record<string, object> = {},
-): PrismaService {
+function makePrismaService(overrides: Record<string, object> = {}): PrismaService {
   const emptyFindMany = { findMany: jest.fn().mockResolvedValue([]) };
   const defaultSettings = {
     id: 1,
@@ -276,14 +275,46 @@ describe('MaintenanceService', () => {
       const runner: ExecRunner = async () => void 0;
       // Start with 8 files — retention is 7 (default), so the oldest 1 should be pruned
       const files = [
-        { name: 'gameledger-2026-01-08T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-08T10:00:00Z') },
-        { name: 'gameledger-2026-01-07T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-07T10:00:00Z') },
-        { name: 'gameledger-2026-01-06T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-06T10:00:00Z') },
-        { name: 'gameledger-2026-01-05T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-05T10:00:00Z') },
-        { name: 'gameledger-2026-01-04T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-04T10:00:00Z') },
-        { name: 'gameledger-2026-01-03T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-03T10:00:00Z') },
-        { name: 'gameledger-2026-01-02T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-02T10:00:00Z') },
-        { name: 'gameledger-2026-01-01T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-01T10:00:00Z') },
+        {
+          name: 'gameledger-2026-01-08T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-08T10:00:00Z'),
+        },
+        {
+          name: 'gameledger-2026-01-07T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-07T10:00:00Z'),
+        },
+        {
+          name: 'gameledger-2026-01-06T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-06T10:00:00Z'),
+        },
+        {
+          name: 'gameledger-2026-01-05T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-05T10:00:00Z'),
+        },
+        {
+          name: 'gameledger-2026-01-04T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-04T10:00:00Z'),
+        },
+        {
+          name: 'gameledger-2026-01-03T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-03T10:00:00Z'),
+        },
+        {
+          name: 'gameledger-2026-01-02T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-02T10:00:00Z'),
+        },
+        {
+          name: 'gameledger-2026-01-01T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-01T10:00:00Z'),
+        },
       ];
       const { adapter, unlinkCalled } = makeFsAdapter(files);
       // Default retention is 7
@@ -308,10 +339,26 @@ describe('MaintenanceService', () => {
   describe('pruneBackups', () => {
     it('deletes the oldest files beyond the retention limit', async () => {
       const files = [
-        { name: 'gameledger-2026-01-04T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-04') },
-        { name: 'gameledger-2026-01-03T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-03') },
-        { name: 'gameledger-2026-01-02T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-02') },
-        { name: 'gameledger-2026-01-01T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-01') },
+        {
+          name: 'gameledger-2026-01-04T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-04'),
+        },
+        {
+          name: 'gameledger-2026-01-03T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-03'),
+        },
+        {
+          name: 'gameledger-2026-01-02T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-02'),
+        },
+        {
+          name: 'gameledger-2026-01-01T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-01'),
+        },
       ];
       const { adapter, unlinkCalled } = makeFsAdapter(files);
       const { svc, audit } = makeService({ fsAdapter: adapter });
@@ -334,8 +381,16 @@ describe('MaintenanceService', () => {
 
     it('keeps all backups when retention is 0', async () => {
       const files = [
-        { name: 'gameledger-2026-01-02T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-02') },
-        { name: 'gameledger-2026-01-01T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-01') },
+        {
+          name: 'gameledger-2026-01-02T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-02'),
+        },
+        {
+          name: 'gameledger-2026-01-01T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-01'),
+        },
       ];
       const { adapter, unlinkCalled } = makeFsAdapter(files);
       const { svc } = makeService({ fsAdapter: adapter });
@@ -347,8 +402,16 @@ describe('MaintenanceService', () => {
 
     it('is a no-op when the number of backups is within the retention limit', async () => {
       const files = [
-        { name: 'gameledger-2026-01-02T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-02') },
-        { name: 'gameledger-2026-01-01T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-01') },
+        {
+          name: 'gameledger-2026-01-02T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-02'),
+        },
+        {
+          name: 'gameledger-2026-01-01T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-01'),
+        },
       ];
       const { adapter, unlinkCalled } = makeFsAdapter(files);
       const { svc } = makeService({ fsAdapter: adapter });
@@ -360,9 +423,21 @@ describe('MaintenanceService', () => {
 
     it('audits each deletion with backup.deleted', async () => {
       const files = [
-        { name: 'gameledger-2026-01-03T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-03') },
-        { name: 'gameledger-2026-01-02T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-02') },
-        { name: 'gameledger-2026-01-01T10-00-00-000Z.dump', size: 100, birthtime: new Date('2026-01-01') },
+        {
+          name: 'gameledger-2026-01-03T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-03'),
+        },
+        {
+          name: 'gameledger-2026-01-02T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-02'),
+        },
+        {
+          name: 'gameledger-2026-01-01T10-00-00-000Z.dump',
+          size: 100,
+          birthtime: new Date('2026-01-01'),
+        },
       ];
       const { adapter } = makeFsAdapter(files);
       const { svc, audit } = makeService({ fsAdapter: adapter });
@@ -440,9 +515,9 @@ describe('MaintenanceService', () => {
     it('rejects an invalid cron expression with BadRequestException', async () => {
       const { svc } = makeService({});
 
-      await expect(
-        svc.updateSettings({ backupCron: 'not-a-cron' }, mockActor),
-      ).rejects.toThrow(BadRequestException);
+      await expect(svc.updateSettings({ backupCron: 'not-a-cron' }, mockActor)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('accepts a valid cron expression', async () => {
@@ -536,8 +611,12 @@ describe('MaintenanceService', () => {
     });
 
     it('removes an existing job before re-registering', () => {
-      const { adapter: schedAdapter, addCronJobCalls, deleteCronJobCalls, registeredJobs } =
-        makeSchedulerAdapter();
+      const {
+        adapter: schedAdapter,
+        addCronJobCalls,
+        deleteCronJobCalls,
+        registeredJobs,
+      } = makeSchedulerAdapter();
       // Pre-populate an existing job
       const fakeJob = { stop: jest.fn() };
       registeredJobs.set('maintenance.backup', fakeJob);
@@ -583,7 +662,11 @@ describe('MaintenanceService', () => {
   // ── getBackupPath ────────────────────────────────────────────────────────────
 
   describe('getBackupPath', () => {
-    const validFile = { name: 'gameledger-2026-01-01T10-00-00-000Z.dump', size: 100, birthtime: new Date() };
+    const validFile = {
+      name: 'gameledger-2026-01-01T10-00-00-000Z.dump',
+      size: 100,
+      birthtime: new Date(),
+    };
 
     it('accepts a valid backup name', () => {
       const { adapter } = makeFsAdapter([validFile]);
@@ -1126,8 +1209,12 @@ describe('MaintenanceService', () => {
     });
 
     it('removes an existing reindex job before re-registering', () => {
-      const { adapter: schedAdapter, addCronJobCalls, deleteCronJobCalls, registeredJobs } =
-        makeSchedulerAdapter();
+      const {
+        adapter: schedAdapter,
+        addCronJobCalls,
+        deleteCronJobCalls,
+        registeredJobs,
+      } = makeSchedulerAdapter();
       // Pre-populate an existing reindex job
       const fakeJob = { stop: jest.fn() };
       registeredJobs.set('maintenance.reindex', fakeJob);

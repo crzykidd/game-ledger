@@ -79,9 +79,7 @@ function getCribbageDeal(participations: Participation[]): number {
   // Use the first participation that has rounds data.
   for (const p of participations) {
     const rounds = p.scoreState?.payload?.rounds ?? [];
-    const emptyCount = rounds.filter(
-      (r) => Object.keys(r.scores ?? {}).length === 0,
-    ).length;
+    const emptyCount = rounds.filter((r) => Object.keys(r.scores ?? {}).length === 0).length;
     return 1 + emptyCount;
   }
   return 1;
@@ -748,7 +746,7 @@ export function GamePage() {
   const CaptureComponent = game ? getCaptureComponent(baseModuleId) : null;
   const isCribbageLike = CaptureComponent !== null;
   const currentDeal = isCribbageLike ? getCribbageDeal(participations) : 1;
-  const cribbageTarget = (isCribbageLike ? (moduleInfo?.end?.target ?? 121) : 121);
+  const cribbageTarget = isCribbageLike ? (moduleInfo?.end?.target ?? 121) : 121;
   const cribbageWinner = isCribbageLike
     ? (participations.find((p) => (totals[p.id] ?? 0) >= cribbageTarget) ?? null)
     : null;
@@ -832,9 +830,7 @@ export function GamePage() {
         return ss ? { ...p, scoreState: { payload: ss.payload } } : p;
       });
       setGame((prev) =>
-        prev
-          ? { ...prev, version: result.version, participations: updatedParticipations }
-          : prev,
+        prev ? { ...prev, version: result.version, participations: updatedParticipations } : prev,
       );
     } catch (err) {
       if (err instanceof StaleVersionError) {
@@ -875,9 +871,7 @@ export function GamePage() {
         return ss ? { ...p, scoreState: { payload: ss.payload } } : p;
       });
       setGame((prev) =>
-        prev
-          ? { ...prev, version: result.version, participations: updatedParticipations }
-          : prev,
+        prev ? { ...prev, version: result.version, participations: updatedParticipations } : prev,
       );
     } catch (err) {
       if (err instanceof StaleVersionError) {
@@ -909,9 +903,7 @@ export function GamePage() {
         return ss ? { ...p, scoreState: { payload: ss.payload } } : p;
       });
       setGame((prev) =>
-        prev
-          ? { ...prev, version: result.version, participations: updatedParticipations }
-          : prev,
+        prev ? { ...prev, version: result.version, participations: updatedParticipations } : prev,
       );
       toast('Last peg undone', 'success');
     } catch (err) {
@@ -1145,7 +1137,9 @@ export function GamePage() {
                         }`}
               </h1>
               {moduleInfo && moduleInfo.maturity !== 'released' && (
-                <Badge variant="warning" data-testid="pre-release-badge">Pre-release</Badge>
+                <Badge variant="warning" data-testid="pre-release-badge">
+                  Pre-release
+                </Badge>
               )}
               <div className="flex gap-2 items-center flex-wrap">
                 {isCreator && !isRankOrder(moduleInfo) && !isCribbageLike && currentRound > 1 && (
@@ -1199,18 +1193,20 @@ export function GamePage() {
           {/* ── Live Totals (numeric + winner_pick games only) ───────── */}
           {/* Hidden for rank_order, winner_pick, and games that have a board
               (the board already shows each player's running score). */}
-          {!isRankOrder(moduleInfo) && !isWinnerPick(moduleInfo) && !getBoardComponent(game.moduleKey.split('@')[0]) && (
-            <Card className="p-4 mb-4">
-              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-3">
-                Running Totals
-              </h2>
-              <TotalsTable
-                participations={participations}
-                totals={totals}
-                moduleInfo={moduleInfo}
-              />
-            </Card>
-          )}
+          {!isRankOrder(moduleInfo) &&
+            !isWinnerPick(moduleInfo) &&
+            !getBoardComponent(game.moduleKey.split('@')[0]) && (
+              <Card className="p-4 mb-4">
+                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-3">
+                  Running Totals
+                </h2>
+                <TotalsTable
+                  participations={participations}
+                  totals={totals}
+                  moduleInfo={moduleInfo}
+                />
+              </Card>
+            )}
 
           {/* ── Score Entry / Finish Order / Winner Pick Entry ──────── */}
           <Card className="p-6">
@@ -1237,69 +1233,71 @@ export function GamePage() {
                 target={moduleInfo?.end?.type === 'target' ? moduleInfo.end.target : undefined}
                 onSave={handleSaveWinnerPick}
               />
-            ) : (() => {
-              if (CaptureComponent) {
-                // Win banner: shown when a player crosses the target mid-deal.
-                if (cribbageWinner) {
-                  return (
-                    <div
-                      className="flex flex-col items-center gap-4 py-4 text-center"
-                      data-testid="win-banner"
-                    >
+            ) : (
+              (() => {
+                if (CaptureComponent) {
+                  // Win banner: shown when a player crosses the target mid-deal.
+                  if (cribbageWinner) {
+                    return (
                       <div
-                        className="text-2xl font-bold text-green-600 dark:text-green-400"
-                        data-testid="win-banner-name"
+                        className="flex flex-col items-center gap-4 py-4 text-center"
+                        data-testid="win-banner"
                       >
-                        {cribbageWinner.player.nickname} wins!
-                      </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
-                        Crossed {cribbageTarget} mid-deal. Confirm to finish the game, or undo
-                        the last peg if it was a mistake.
-                      </p>
-                      <div className="flex gap-3 flex-wrap justify-center">
-                        <Button
-                          variant="secondary"
-                          loading={saving}
-                          onClick={() => void handleUndoLast()}
-                          data-testid="win-banner-undo-btn"
+                        <div
+                          className="text-2xl font-bold text-green-600 dark:text-green-400"
+                          data-testid="win-banner-name"
                         >
-                          ↶ Undo last peg
-                        </Button>
-                        <Button
-                          variant="primary"
-                          loading={finishing}
-                          onClick={() => setFinishConfirmOpen(true)}
-                          data-testid="win-banner-finish-btn"
-                        >
-                          Finish Game
-                        </Button>
+                          {cribbageWinner.player.nickname} wins!
+                        </div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
+                          Crossed {cribbageTarget} mid-deal. Confirm to finish the game, or undo the
+                          last peg if it was a mistake.
+                        </p>
+                        <div className="flex gap-3 flex-wrap justify-center">
+                          <Button
+                            variant="secondary"
+                            loading={saving}
+                            onClick={() => void handleUndoLast()}
+                            data-testid="win-banner-undo-btn"
+                          >
+                            ↶ Undo last peg
+                          </Button>
+                          <Button
+                            variant="primary"
+                            loading={finishing}
+                            onClick={() => setFinishConfirmOpen(true)}
+                            data-testid="win-banner-finish-btn"
+                          >
+                            Finish Game
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    );
+                  }
+                  return (
+                    <CaptureComponent
+                      participations={participations}
+                      currentDeal={currentDeal}
+                      saving={saving}
+                      target={cribbageTarget}
+                      addScore={handleAddScore}
+                      endDeal={handleEndDeal}
+                      onUndoLast={handleUndoLast}
+                    />
                   );
                 }
                 return (
-                  <CaptureComponent
+                  <ScoreForm
+                    key={currentRound}
                     participations={participations}
-                    currentDeal={currentDeal}
+                    currentRound={currentRound}
                     saving={saving}
-                    target={cribbageTarget}
-                    addScore={handleAddScore}
-                    endDeal={handleEndDeal}
-                    onUndoLast={handleUndoLast}
+                    moduleInfo={moduleInfo}
+                    onSave={handleSaveRound}
                   />
                 );
-              }
-              return (
-                <ScoreForm
-                  key={currentRound}
-                  participations={participations}
-                  currentRound={currentRound}
-                  saving={saving}
-                  moduleInfo={moduleInfo}
-                  onSave={handleSaveRound}
-                />
-              );
-            })()}
+              })()
+            )}
           </Card>
         </main>
       </AppShell>
