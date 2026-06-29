@@ -2,7 +2,10 @@
 // Learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" for local dev; the musl/openssl-3 target matches the node:alpine
+  // production image (avoids the libssl.so.1.1 engine-load error on Alpine).
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
