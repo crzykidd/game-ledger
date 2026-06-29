@@ -3,6 +3,7 @@
 A self-hosted, mobile-first app for tracking game scores over time.
 
 [![CI](https://github.com/crzykidd/game-ledger/actions/workflows/ci.yml/badge.svg)](https://github.com/crzykidd/game-ledger/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/crzykidd/game-ledger)](https://github.com/crzykidd/game-ledger/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Status: pre-release / in active development.** Not yet at a stable v1.0 — expect
@@ -144,6 +145,16 @@ Full design docs live in [`docs/`](docs/):
 - [`docs/user-management.md`](docs/user-management.md) — auth, roles, invites
 - [`docs/games/catalog.md`](docs/games/catalog.md) — scoring models for every included game
 - [`docs/decisions.md`](docs/decisions.md) — non-obvious decisions made during development
+
+## What's New
+
+See [CHANGELOG.md](CHANGELOG.md) for the full history.
+
+### v0.1.0
+
+Initial public release — 18 game modules including a live Cribbage peg board,
+invite-only local auth, admin controls and Server Maintenance, Tailwind/shadcn/ui
+mobile-first frontend, and GitHub Actions CI with ghcr.io image publishing.
 
 ## License
 

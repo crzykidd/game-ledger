@@ -15,6 +15,7 @@ import { PlayersModule } from './players/players.module';
 import { ModuleLoaderModule } from './module-loader/module-loader.module';
 import { GamesModule } from './games/games.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import { VersionModule } from './version/version.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
     ModuleLoaderModule,
     GamesModule,
     MaintenanceModule,
+    VersionModule,
   ],
 })
 export class AppModule {}

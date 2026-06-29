@@ -106,3 +106,42 @@ acting.
   than staging and waiting for a `y/n`.
 - `main` is reached only via a reviewed PR that passes required GitHub Actions CI checks —
   never by committing directly.
+
+<!--
+Source: standards/release-prep-and-cut @ v1.1.0 (crzynet/homelab-configs).
+Pasted verbatim below (gitea URL de-linked; standard is referenced by name + version).
+The full standard (two-phase prep/cut workflow, archive trigger, validation
+steps, adoption checklist) lives at:
+  crzynet/homelab-configs standards/release-prep-and-cut/README.md @ v1.1.0
+-->
+
+## Release process (operational rules)
+
+This project adopts the `release-prep-and-cut` standard. The full why-and-how
+lives at the source above; the rules below are the per-session do/don'ts a
+coding agent must honor by default:
+
+- **The version is stored BARE in the source-of-truth file** — no `v` prefix
+  anywhere in code. The `v` prefix is added in exactly one place: the git tag
+  and matching GitHub release name. Don't add it to README badges, CHANGELOG
+  headers, in-code image tags, or anywhere else.
+- **`CHANGELOG.md` is the single source of truth for release notes.** The PR
+  description (set by `/release-prep`) and the GitHub release body (set by
+  `/release-cut`) reuse the **same section verbatim**. Never author release
+  notes twice.
+- **One commit per release prep.** Version bump + changelog roll + every doc
+  sync ship in a single `chore(release): prepare v<version>` commit. No
+  `Co-authored-by:` trailers.
+- **Never re-tag.** If `v<version>` already exists as a local tag, a remote
+  tag, or a GitHub release, STOP. Never delete-and-recreate; never `--force`.
+  Pick the next version instead.
+- **`/release-cut` only after the PR has merged and CI is green.** The
+  publish-to-`main` workflow must have already pushed `:latest` images to the
+  registry before `/release-cut` runs. If you cannot confirm both — STOP and
+  tell the user to wait.
+- **The release tag is the only thing the cut command writes to `main`.** Both
+  the prep commit and any follow-up docs commit land on `dev` and reach `main`
+  only via PR. Never push directly to `main` as part of a release.
+
+If you're unsure whether an action would violate one of the above, stop and
+ask before acting.

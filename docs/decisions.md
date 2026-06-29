@@ -3,6 +3,42 @@
 Non-obvious decisions made during execution, **newest at top**. Upfront scoping decisions live
 in `docs/decisions-needed.md`; this log captures choices made while building.
 
+## 2026-06-28: Release tooling adoption (prompt 47)
+
+### Canonical version source — root `package.json` "version" (bare semver)
+
+`package.json` `"version"` at the monorepo root is the single source of truth. Stored bare
+(`0.1.0`, no `v` prefix) per the `release-prep-and-cut` standard. The three workspace
+`package.json`s (`backend/`, `frontend/`, `packages/contract/`) are kept in sync manually at
+each `/release-prep` bump — the command updates all four in one step.
+
+Rejected alternatives: a separate `VERSION` file (extra file with no ecosystem tooling benefit)
+and embedding the version in a TypeScript constant (hardcodes a second copy that diverges).
+
+### In-app version display — dual approach (backend endpoint + build-time constant)
+
+**Backend:** `VersionService` reads the backend's own `package.json` at runtime (two-candidate
+path resolution: `dist/../package.json` in prod, `src/version/../../package.json` in ts-jest).
+Exposed at `GET /api/version` as `{ version: string }` — public endpoint, no auth guard,
+consistent with the health endpoint pattern. Provides a live machine-readable source of truth.
+
+**Frontend:** `__APP_VERSION__` is injected at build/test time by Vite's `define` from
+`frontend/package.json` (which stays in sync with root). Zero runtime overhead, no extra API
+call. Rendered as a subtle `v{version}` text in the AppShell page footer. Declared in
+`frontend/src/vite-env.d.ts`.
+
+Rejected: fetching from the backend `/api/version` at runtime in the frontend — adds a
+network dependency and state management for a display-only concern. The build-time constant is
+sufficient since a version bump always triggers a rebuild.
+
+### Release commands installed in `.claude/commands/`
+
+`/release-prep` and `/release-cut` installed as `.claude/commands/release-prep.md` and
+`.claude/commands/release-cut.md` with all template placeholders filled for this project.
+The `CLAUDE-snippet.md` is pasted verbatim into `CLAUDE.md` with the gitea URL de-linked
+(standard referenced by name + version: `crzynet/homelab-configs standards/release-prep-and-cut
+@ v1.1.0`) — the repo is public and gitea is retired.
+
 ## 2026-06-28: In-app "Give feedback → GitHub issue" feature design (prompt 45, plan only)
 
 Design pass for the v0.1.0 feedback feature: a global button captures an html2canvas

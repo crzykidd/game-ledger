@@ -2,6 +2,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import { readFileSync } from 'fs';
+
+// Read the version from the canonical source (frontend/package.json) at build/test time.
+// This keeps the single source of truth without a second runtime lookup.
+const { version: APP_VERSION } = JSON.parse(
+  readFileSync(resolve(__dirname, 'package.json'), 'utf-8'),
+) as { version: string };
 
 export default defineConfig({
   plugins: [react()],
@@ -43,6 +50,12 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  define: {
+    // Injected at build/test time from frontend/package.json so the frontend has
+    // a single canonical version string without a second runtime API call.
+    // Declare in src/vite-env.d.ts: declare const __APP_VERSION__: string;
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
   },
   build: {
     outDir: 'dist',
