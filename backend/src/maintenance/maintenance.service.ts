@@ -645,6 +645,8 @@ export class MaintenanceService implements OnModuleInit {
       participations,
       // GameEvent.id is BigInt — the JSON replacer below handles serialization.
       game_events: gameEvents,
+      // NOTE: the `feedbacks` table is intentionally excluded — it contains
+      // binary screenshot blobs that would bloat the JSON export.
       score_states: scoreStates,
       game_results: safeGameResults,
       players,

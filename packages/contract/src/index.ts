@@ -163,6 +163,70 @@ export interface UpdateMaintenanceSettingsBody {
   reindexCron?: string | null;
 }
 
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+
+export enum FeedbackCategory {
+  BUG = 'BUG',
+  ENHANCEMENT = 'ENHANCEMENT',
+  QUESTION = 'QUESTION',
+}
+
+export enum FeedbackStatus {
+  OPEN = 'OPEN',
+  CLOSED = 'CLOSED',
+}
+
+export interface FeedbackItem {
+  id: string;
+  reporterUserId: string;
+  reporterNickname: string;
+  route: string;
+  moduleKey: string | null;
+  moduleMaturity: string | null;
+  category: FeedbackCategory;
+  text: string;
+  hasScreenshot: boolean;
+  githubIssueUrl: string | null;
+  githubIssueNumber: number | null;
+  status: FeedbackStatus;
+  createdAt: string;
+}
+
+export interface CreateFeedbackBody {
+  category: FeedbackCategory;
+  text: string;
+  route: string;
+  moduleKey?: string | null;
+  moduleMaturity?: string | null;
+  /** Base64-encoded PNG, optional. Server enforces ~2 MB cap. */
+  screenshotBase64?: string | null;
+}
+
+export interface CreateFeedbackResponse {
+  id: string;
+  githubIssueUrl: string | null;
+}
+
+/** Feedback settings as returned by GET /api/feedback/settings. Token is NEVER returned. */
+export interface FeedbackSettings {
+  githubEnabled: boolean;
+  githubRepoOwner: string | null;
+  githubRepoName: string | null;
+  githubAssetBranch: string;
+  /** True if a GitHub token has been stored (write-only). */
+  githubTokenSet: boolean;
+  updatedAt: string;
+}
+
+export interface UpdateFeedbackSettingsBody {
+  githubEnabled?: boolean;
+  githubRepoOwner?: string | null;
+  githubRepoName?: string | null;
+  githubAssetBranch?: string | null;
+  /** Provide to update the stored token; omit to leave it unchanged. */
+  githubToken?: string | null;
+}
+
 // ─── Module schema ────────────────────────────────────────────────────────────
 
 import moduleSchema from './module.schema.json';

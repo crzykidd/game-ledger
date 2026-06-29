@@ -3,6 +3,29 @@
 Non-obvious decisions made during execution, **newest at top**. Upfront scoping decisions live
 in `docs/decisions-needed.md`; this log captures choices made while building.
 
+## 2026-06-29: Feedback backend — implementation notes (prompt 46)
+
+**FeedbackCategory / FeedbackStatus as Prisma enums (not string literals).** Using Prisma
+enums (`BUG | ENHANCEMENT | QUESTION`, `OPEN | CLOSED`) keeps the DB column type-safe and
+generates proper SQL `CREATE TYPE` DDL, matching the existing enum pattern (`GameStatus`,
+`Role`, etc.). The contract enums (`FeedbackCategory`, `FeedbackStatus`) mirror these values.
+
+**`toItem()` casts `category`/`status` strings via `as` — safe because Prisma enforces the
+enum constraint at the DB.** The service's `toItem()` helper casts the Prisma enum fields to
+`FeedbackItem['category']` / `FeedbackItem['status']` with `as`. This is safe: Prisma maps
+the DB-enum values to the TypeScript enum values bijectively, and the DB constraint prevents
+any other value from being stored.
+
+**`FeedbackItem.hasScreenshot` is a computed boolean (not the blob).** The list/detail API
+never returns the raw screenshot bytes — only `hasScreenshot: boolean`. The PNG is served
+separately on `GET /api/admin/feedback/:id/screenshot`. This keeps list responses small.
+
+**Dev container boot: copy Prisma schema + `prisma generate` + copy contract dist.** The
+dev hot-reload container mounts only `backend/src` and `packages/contract/src` (not
+`backend/prisma`). After adding the migration, `prisma generate` was run inside the container
+via `docker exec` + `docker cp` to update the Prisma client and contract dist without
+rebuilding the full image. In production the Dockerfile `RUN prisma generate` handles this.
+
 ## 2026-06-28: In-app "Give feedback → GitHub issue" feature design (prompt 45, plan only)
 
 Design pass for the v0.1.0 feedback feature: a global button captures an html2canvas
