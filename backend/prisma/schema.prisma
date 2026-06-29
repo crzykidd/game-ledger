@@ -65,17 +65,6 @@ enum GameStatus {
   ABANDONED
 }
 
-enum FeedbackCategory {
-  BUG
-  ENHANCEMENT
-  QUESTION
-}
-
-enum FeedbackStatus {
-  OPEN
-  CLOSED
-}
-
 // ─── Auth / Users ────────────────────────────────────────────────────────────
 
 model User {
@@ -103,7 +92,6 @@ model User {
   gamesCreated      Game[]
   playgroupsCreated Playgroup[]
   auditLogsActed    AuditLog[]
-  feedbacks         Feedback[]
 
   @@map("users")
 }
@@ -400,44 +388,4 @@ model GameResult {
 
   @@index([gameId])
   @@map("game_results")
-}
-
-// ─── Feedback ────────────────────────────────────────────────────────────────
-
-/// Singleton feedback/GitHub integration config (id = 1 always).
-model FeedbackSetting {
-  id                Int      @id @default(1)
-  githubEnabled     Boolean  @default(false) @map("github_enabled")
-  githubRepoOwner   String?  @map("github_repo_owner")
-  githubRepoName    String?  @map("github_repo_name")
-  githubAssetBranch String   @default("feedback-assets") @map("github_asset_branch")
-  /// Write-only: never returned by any API response.
-  githubToken       String?  @map("github_token")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-
-  @@map("feedback_settings")
-}
-
-/// User feedback submission, may include a screenshot blob.
-model Feedback {
-  id                String           @id @default(cuid())
-  reporterUserId    String           @map("reporter_user_id")
-  route             String
-  moduleKey         String?          @map("module_key")
-  moduleMaturity    String?          @map("module_maturity")
-  category          FeedbackCategory
-  text              String
-  screenshot        Bytes?
-  screenshotMime    String?          @map("screenshot_mime")
-  githubIssueUrl    String?          @map("github_issue_url")
-  githubIssueNumber Int?             @map("github_issue_number")
-  status            FeedbackStatus   @default(OPEN)
-  createdAt         DateTime         @default(now()) @map("created_at")
-
-  reporter User @relation(fields: [reporterUserId], references: [id])
-
-  @@index([reporterUserId])
-  @@index([status])
-  @@map("feedbacks")
 }

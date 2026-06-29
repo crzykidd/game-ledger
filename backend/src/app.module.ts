@@ -15,7 +15,6 @@ import { PlayersModule } from './players/players.module';
 import { ModuleLoaderModule } from './module-loader/module-loader.module';
 import { GamesModule } from './games/games.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
-import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -35,12 +34,6 @@ import { FeedbackModule } from './feedback/feedback.module';
         ttl: 60_000,
         limit: 10,
       },
-      // Feedback submission limit (~5/min per IP)
-      {
-        name: 'feedback',
-        ttl: 60_000,
-        limit: 5,
-      },
     ]),
 
     PrismaModule,
@@ -57,7 +50,6 @@ import { FeedbackModule } from './feedback/feedback.module';
     ModuleLoaderModule,
     GamesModule,
     MaintenanceModule,
-    FeedbackModule,
   ],
 })
 export class AppModule {}
