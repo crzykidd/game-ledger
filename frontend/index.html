@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Ledger</title>
+    <!-- FOUC prevention: apply stored theme before React renders -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('gl_theme');
+          // Resolve 'system'/null to an explicit value: Tailwind's dark mode keys on the
+          // [data-theme="dark"] attribute and cannot read a media query, so we must always
+          // set the attribute (not rely on @media) to keep new + old screens consistent.
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          // localStorage unavailable (private mode, etc.) — no-op
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

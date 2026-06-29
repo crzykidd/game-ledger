@@ -1,0 +1,51 @@
+id: liars-dice
+name: Liar's Dice
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 6
+
+scoringType:
+  id: rank_order
+  version: "1.0.0"
+
+end:
+  type: game_defined
+
+result:
+  type: ranking
+
+info:
+  summary: |
+    Liar's Dice (also known as Perudo or Dudo) is a bluffing dice game where players make
+    increasingly bold bids about the dice hidden under their cups. Call a bluff and
+    someone loses a die. Lose all your dice and you're out. Last player with dice wins.
+
+  rules: |
+    ## Liar's Dice Rules
+
+    - Each player starts with 5 dice hidden under their cup.
+    - The starting player bids: a quantity and a face value (e.g. "three 4s" means
+      they claim at least three dice showing 4 across ALL players' dice combined).
+    - The next player must either:
+      - **Raise the bid** (higher quantity OR same quantity with higher face value), OR
+      - **Call the bluff** ("Dudo!" / "Liar!").
+    - When a bluff is called, all dice are revealed. Count how many dice show the bid face.
+    - If the actual count is **equal to or more** than the bid: the caller loses a die.
+    - If the actual count is **less** than the bid: the bidder loses a die.
+    - Players with no dice remaining are eliminated.
+    - Last player with dice remaining wins.
+
+    **Wild ones (optional house rule):** Ones (1s) count as any face for bid purposes.
+
+  scoring: |
+    ## Finish Order (Elimination Order)
+
+    Record the order players are eliminated (lose all dice):
+    - **Last standing**: Winner (Rank 1)
+    - **2nd-to-last eliminated**: Rank 2
+    - **...continuing...**
+    - **First eliminated**: Last rank
+
+    No numeric score — rank is determined by survival order.

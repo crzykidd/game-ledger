@@ -1,0 +1,46 @@
+id: exploding-kittens
+name: Exploding Kittens
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 5
+
+scoringType:
+  id: rank_order
+  version: "1.0.0"
+
+end:
+  type: game_defined
+
+result:
+  type: ranking
+
+info:
+  summary: |
+    Exploding Kittens is an elimination card game where players draw cards hoping to avoid
+    the Exploding Kitten. Draw one and you're out — unless you have a Defuse card. The last
+    player standing wins. Record finish order for ranking (winner at rank 1).
+
+  rules: |
+    ## Exploding Kittens Rules
+
+    - Shuffle Exploding Kittens and Defuse cards into the deck along with action cards.
+    - On your turn: play any cards from your hand (optional), then draw a card.
+    - If you draw an **Exploding Kitten**, you are eliminated UNLESS you play a Defuse card.
+    - If you use a Defuse card, secretly re-insert the Exploding Kitten anywhere in the deck.
+    - Key cards: **Skip** (end your turn without drawing), **Attack** (end turn, next player
+      takes 2 turns), **Shuffle**, **See the Future** (peek top 3), **Nope** (cancel any action),
+      **Favor** (steal from another player), combo cards (steal blind or targeted).
+    - Last player with cards remaining wins.
+
+  scoring: |
+    ## Finish Order (Elimination Order)
+
+    Record the order players are eliminated:
+    - **Last standing**: Winner (Rank 1)
+    - **2nd-to-last eliminated**: Rank 2
+    - **...continuing...**
+    - **First eliminated**: Last rank
+
+    No numeric score — rank is determined by survival order.

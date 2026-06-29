@@ -1,0 +1,113 @@
+id: cribbage
+name: Cribbage
+version: "1.0.0"
+maturity: released
+
+players:
+  min: 2
+  max: 3
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: high
+    aggregate: sum
+
+end:
+  type: target
+  target: 121
+  finishRound: false
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Points this hand
+    required: true
+
+info:
+  summary: |
+    Cribbage is a classic card game where players score points during play and
+    counting. The first player to peg their token to 121 (twice around a standard
+    board) wins. Enter each player's total points — pegging plus counting — after
+    every hand.
+
+  rules: |
+    ## Cribbage Rules
+
+    ### Players
+    - **2 players:** each is dealt 6 cards; both discard 2 to the crib.
+    - **3 players:** each is dealt 5 cards; each discards 1 to the crib; the dealer
+      takes one starter card from the deck to complete the 4-card crib. Each player
+      scores for themselves. Dealer rotates left each hand.
+
+    ### A Hand
+    1. **Deal** — cards dealt as above.
+    2. **Discard** — each player sends cards to the crib (owned by the dealer).
+    3. **Cut / Starter** — the non-dealer cuts the deck; the top card is the starter
+       (turned up). If the starter is a jack, the dealer immediately scores 2 points
+       (his heels / nibs).
+    4. **The play (pegging)** — players alternate laying cards, keeping a running
+       count. Score for fifteens (count hits 15 = 2 pts), thirty-ones (count hits
+       31 = 2 pts), go / last card (1 pt), and pairs or runs as they appear.
+       Count resets to 0 after 31 or a go.
+    5. **The show (counting)** — starting with the non-dealer (or left of dealer in
+       3-player), each player counts their 4-card hand + the starter for fifteens,
+       pairs, runs, and flush. The dealer counts last, then counts the crib.
+    6. **Enter scores** — after each hand, enter the total points each player earned
+       (pegging + counting). The dealer's crib points count for the dealer.
+
+    ### Winning
+    The first player to reach **121** points wins — even mid-hand. The scorekeeper
+    finalizes the game the moment 121 is crossed.
+
+    ### Skunks
+    - A player who has not yet reached **91** when the winner hits 121 is **skunked**
+      (counts as a double win in some variants).
+    - A player who has not yet reached **61** is **double skunked**.
+    - The 91-point and 61-point skunk lines are displayed on the board (see the board
+      visual in the scoring tab).
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    ### The Play (pegging)
+    | Event | Points |
+    |---|---|
+    | Fifteen (running count = 15) | 2 |
+    | Thirty-one (running count = 31) | 2 |
+    | Go / last card (cannot play without exceeding 31) | 1 |
+    | Pair (same rank as previous card) | 2 |
+    | Three of a kind (pair royal) | 6 |
+    | Four of a kind (double pair royal) | 12 |
+    | Run of 3 during play | 3 |
+    | Run of 4 during play | 4 |
+    | Run of 5 during play | 5 |
+
+    ### The Show (counting hand + starter)
+    | Combination | Points |
+    |---|---|
+    | Fifteen (any combo of cards summing to 15) | 2 per combo |
+    | Pair | 2 |
+    | Three of a kind | 6 |
+    | Four of a kind | 12 |
+    | Run of 3 | 3 |
+    | Run of 4 | 4 |
+    | Run of 5 | 5 |
+    | Flush — all 4 hand cards same suit | 4 |
+    | Flush — all 4 hand cards + starter same suit | 5 |
+    | Crib flush — all 5 cards (hand + starter) must match | 5 |
+    | His nobs (jack in hand/crib matching starter's suit) | 1 |
+
+    ### Special — The Cut
+    | Event | Points |
+    |---|---|
+    | His heels / nibs (dealer cuts a jack as starter) | 2 (scored immediately) |
+
+    ### Board Lines
+    - **121** — winning peg (game over the instant a player reaches this)
+    - **91** — skunk line (opponent skunked if they haven't crossed 91 when you win)
+    - **61** — double-skunk line

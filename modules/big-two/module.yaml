@@ -1,0 +1,48 @@
+id: big-two
+name: Big Two
+version: "1.0.0"
+
+players:
+  min: 4
+  max: 4
+
+scoringType:
+  id: rank_order
+  version: "1.0.0"
+
+end:
+  type: game_defined
+
+result:
+  type: ranking
+
+info:
+  summary: |
+    Big Two (also known as Deuces or Dai Di) is a shedding card game for exactly 4 players.
+    Cards rank from 3 (lowest) to 2 (highest). Players race to empty their hand. The first
+    to do so wins; the last player still holding cards loses.
+
+  rules: |
+    ## Big Two Rules
+
+    - Deal all 52 cards evenly (13 cards each to 4 players).
+    - The player with the 3 of Diamonds leads the first turn.
+    - On your turn, play a higher-ranking single card, pair, triple, or valid 5-card hand
+      than the previous play, OR pass.
+    - A trick ends when all other players pass — the last player to play leads next.
+    - **Card ranking** (low to high): 3 4 5 6 7 8 9 10 J Q K A 2
+    - **Suit ranking** (low to high): ♦ ♣ ♥ ♠
+    - **5-card hands** (high to low): Straight, Flush, Full House, Four of a Kind, Straight Flush
+    - First player to empty their hand wins.
+    - Play continues for the full finish order.
+
+  scoring: |
+    ## Finish Order
+
+    Record the order in which players empty their hand:
+    - **1st out**: Winner (Rank 1)
+    - **2nd out**: Rank 2
+    - **3rd out**: Rank 3
+    - **Last with cards**: Loser (Rank 4)
+
+    No numeric score — rank is the result.

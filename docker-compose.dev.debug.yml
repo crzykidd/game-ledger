@@ -1,0 +1,22 @@
+# Debug override — adds direct host ports for db, backend, and frontend.
+# Use when you need to reach a service without going through the nginx ingress
+# (e.g. connecting a DB client to Postgres, hitting the NestJS API directly,
+# or connecting browser devtools to Vite's HMR server).
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml -f docker-compose.dev.debug.yml up --build
+#
+# Each port is overridable via the corresponding env var:
+#   DEV_FRONTEND_PORT (default 5173), DEV_BACKEND_PORT (default 3001), DEV_DB_PORT (default 5432)
+services:
+  frontend:
+    ports:
+      - "${DEV_FRONTEND_PORT:-5173}:5173"
+
+  backend:
+    ports:
+      - "${DEV_BACKEND_PORT:-3001}:3001"
+
+  db:
+    ports:
+      - "${DEV_DB_PORT:-5432}:5432"

@@ -1,0 +1,74 @@
+id: phase-10
+name: Phase 10
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 6
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: low
+    aggregate: sum
+
+end:
+  type: game_defined
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Penalty Points
+    required: true
+
+info:
+  summary: |
+    Phase 10 is a rummy-style card game where players race to complete 10 sequential
+    phases (sets and runs). Each round, players who did not complete the phase score
+    penalty points for unplayed cards left in their hand. The player who finishes all
+    10 phases first with the lowest total score wins.
+
+  rules: |
+    ## Phase 10 Rules
+
+    - Each player starts on Phase 1. Phases must be completed in order (1 through 10).
+    - On your turn, draw a card from the deck or discard pile, then discard one card.
+    - To complete your phase, lay down the required set of cards (see Phases below).
+    - Once your phase is laid down, play cards on your own or others' laid-down phases
+      to empty your hand.
+    - The round ends when one player empties their hand.
+    - Players who completed their phase advance to the next one.
+    - Players who did NOT complete their phase stay on it next round and score penalties.
+    - The game ends when a player completes Phase 10. If multiple players finish Phase 10
+      in the same round, the player with the lowest cumulative penalty score wins.
+    - Lowest total penalty score wins.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    **Penalty points for cards left in hand at round end:**
+    - Cards 1–9: **5 points each**
+    - Cards 10–12: **10 points each**
+    - Skip cards: **15 points each**
+    - Wild cards: **25 points each**
+
+    Enter each player's total penalty points for the round (0 if they emptied their hand).
+
+    **The 10 Phases:**
+    1. 2 sets of 3
+    2. 1 set of 3 + 1 run of 4
+    3. 1 set of 4 + 1 run of 4
+    4. 1 run of 7
+    5. 1 run of 8
+    6. 1 run of 9
+    7. 2 sets of 4
+    8. 7 cards of one color
+    9. 1 set of 5 + 1 set of 2
+    10. 1 set of 5 + 1 set of 3
+
+    **Note:** The app tracks penalty points per round. Track which phase each player is
+    on separately (a notepad or the physical phase cards work well alongside the app).

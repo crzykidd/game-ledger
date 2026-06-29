@@ -1,0 +1,64 @@
+id: skyjo
+name: Skyjo
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 8
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: low
+    aggregate: sum
+    roundResolver: "skyjo/doubling"
+
+end:
+  type: target
+  target: 100
+  finishRound: true
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Round Score
+    required: true
+  - name: endedRound
+    type: boolean
+    label: Ended Round
+    required: true
+
+info:
+  summary: |
+    Skyjo is a card game where players aim to have the lowest score. Each round, players
+    reveal cards and try to minimize their total. The first player to reach 100 points
+    triggers the final round.
+
+  rules: |
+    ## Skyjo Rules
+
+    - Players start with 12 face-down cards arranged in a 3×4 grid.
+    - Two cards are revealed at game start.
+    - On your turn: draw from the deck or discard pile, swap a card from your grid,
+      or discard the drawn card and flip one face-down card.
+    - A column of three identical cards is discarded automatically.
+    - A round ends when one player flips all their cards face-up.
+    - At round end, all remaining face-down cards are flipped and scores calculated.
+    - The player who ends the round with the highest score (or equal to lowest) has
+      their score doubled (see Doubling Rule).
+    - Game ends after the round in which a player reaches or exceeds 100 points total.
+    - Lowest score wins.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    - Each card's face value counts toward your round score.
+    - Values range from -2 to 12 (special cards: -2, 0, and 1–12).
+    - **Doubling Rule**: If the player who ended the round does NOT have the strictly
+      lowest score AND their score is greater than 0, their score is doubled.
+    - Totals accumulate across rounds.
+    - Lowest cumulative total wins when the game ends.

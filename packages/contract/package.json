@@ -1,0 +1,16 @@
+{
+  "name": "@game-ledger/contract",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && cp src/*.json dist/",
+    "dev": "tsc --watch",
+    "lint": "tsc --noEmit",
+    "test": "echo 'no tests in contract yet' && exit 0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

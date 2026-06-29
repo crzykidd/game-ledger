@@ -1,0 +1,388 @@
+// This is your Prisma schema file.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  PLAYER
+}
+
+enum UserState {
+  PENDING
+  ACTIVE
+  DISABLED
+}
+
+enum ThemePref {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum Permission {
+  CREATE_GAME
+  CONFIGURE_OWN_GAME
+  INVITE_USERS
+  SEND_PASSWORD_RESET
+  MANAGE_USERS
+  MANAGE_GROUPS_ROLES
+  MANAGE_GLOBAL_SETTINGS
+  MANAGE_GAME_MODULES
+  VIEW_ALL
+}
+
+enum TokenType {
+  INVITE
+  PASSWORD_RESET
+  SHARE
+}
+
+enum TokenStatus {
+  PENDING
+  CONSUMED
+  EXPIRED
+  REVOKED
+}
+
+enum GameStatus {
+  ACTIVE
+  COMPLETE
+  ABANDONED
+}
+
+// ─── Auth / Users ────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  fullName     String    @map("full_name")
+  nickname     String
+  role         Role      @default(PLAYER)
+  state        UserState @default(PENDING)
+  themePref    ThemePref @default(SYSTEM) @map("theme_pref")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  lastLoginAt          DateTime? @map("last_login_at")
+  failedLoginAttempts  Int       @default(0) @map("failed_login_attempts")
+  lockedUntil          DateTime? @map("locked_until")
+
+  sessions          Session[]
+  tokensCreated     Token[]                @relation("TokenCreatedBy")
+  tokensTargeted    Token[]                @relation("TokenTargetUser")
+  permOverrides     UserPermissionOverride[]
+  groups            UserGroup[]
+  players           Player[]               @relation("PlayerLinkedUser")
+  playersCreated    Player[]               @relation("PlayerCreatedBy")
+  gamesCreated      Game[]
+  playgroupsCreated Playgroup[]
+  auditLogsActed    AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  tokenHash  String    @unique @map("token_hash")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  userAgent  String?   @map("user_agent")
+  ipAddress  String?   @map("ip_address")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Typed-token table: handles invites, password resets, and share links.
+model Token {
+  id                  String      @id @default(cuid())
+  type                TokenType
+  tokenHash           String      @unique @map("token_hash")
+  targetEmail         String?     @map("target_email")
+  targetUserId        String?     @map("target_user_id")
+  targetGuestPlayerId String?     @map("target_guest_player_id")
+  targetGameId        String?     @map("target_game_id")
+  createdById         String      @map("created_by_id")
+  createdAt           DateTime    @default(now()) @map("created_at")
+  expiresAt           DateTime    @map("expires_at")
+  consumedAt          DateTime?   @map("consumed_at")
+  status              TokenStatus @default(PENDING)
+
+  createdBy   User    @relation("TokenCreatedBy", fields: [createdById], references: [id])
+  targetUser  User?   @relation("TokenTargetUser", fields: [targetUserId], references: [id])
+  targetGuest Player? @relation("TokenTargetGuest", fields: [targetGuestPlayerId], references: [id])
+  targetGame  Game?   @relation("TokenTargetGame", fields: [targetGameId], references: [id])
+
+  @@index([type, status])
+  @@map("tokens")
+}
+
+// ─── Permissions ─────────────────────────────────────────────────────────────
+
+/// Per-user permission toggle (overrides role default).
+model UserPermissionOverride {
+  userId     String     @map("user_id")
+  permission Permission
+  granted    Boolean
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, permission])
+  @@map("user_permission_overrides")
+}
+
+/// Named group for applying bulk permission overrides.
+model Group {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  permissions GroupPermission[]
+  members     UserGroup[]
+
+  @@map("groups")
+}
+
+/// Permission grant/denial attached to a group.
+model GroupPermission {
+  groupId    String     @map("group_id")
+  permission Permission
+  granted    Boolean
+
+  group Group @relation(fields: [groupId], references: [id])
+
+  @@id([groupId, permission])
+  @@map("group_permissions")
+}
+
+/// Join table: user ↔ group membership.
+model UserGroup {
+  userId  String @map("user_id")
+  groupId String @map("group_id")
+
+  user  User  @relation(fields: [userId], references: [id])
+  group Group @relation(fields: [groupId], references: [id])
+
+  @@id([userId, groupId])
+  @@map("user_groups")
+}
+
+// ─── Audit ────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?  @map("actor_user_id")
+  action      String
+  targetType  String?  @map("target_type")
+  targetId    String?  @map("target_id")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+// ─── Global Settings ─────────────────────────────────────────────────────────
+
+/// Singleton install / global settings row (only one row ever exists, id = 1).
+model GlobalSetting {
+  id               Int       @id @default(1)
+  setupCompletedAt DateTime? @map("setup_completed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@map("global_settings")
+}
+
+// ─── Maintenance Settings ────────────────────────────────────────────────────
+
+/// Singleton maintenance configuration row (only one row ever exists, id = 1).
+model MaintenanceSetting {
+  id               Int      @id @default(1)
+  backupEnabled    Boolean  @default(false) @map("backup_enabled")
+  backupCron       String?  @map("backup_cron")
+  backupRetention  Int      @default(7) @map("backup_retention")
+  reindexEnabled   Boolean  @default(false) @map("reindex_enabled")
+  reindexCron      String?  @map("reindex_cron")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("maintenance_settings")
+}
+
+// ─── Players / Playgroups ─────────────────────────────────────────────────────
+
+/// Roster entry. userId=null means a guest (no login). Guest becomes linked on invite-accept.
+model Player {
+  id          String   @id @default(cuid())
+  nickname    String
+  userId      String?  @map("user_id")
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  linkedUser    User?             @relation("PlayerLinkedUser", fields: [userId], references: [id])
+  createdBy     User              @relation("PlayerCreatedBy", fields: [createdById], references: [id])
+  memberships   PlaygroupMember[]
+  participations Participation[]
+  gameEvents    GameEvent[]
+  tokensTarget  Token[]           @relation("TokenTargetGuest")
+
+  @@index([userId])
+  @@map("players")
+}
+
+model Playgroup {
+  id          String   @id @default(cuid())
+  name        String
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  createdBy User              @relation(fields: [createdById], references: [id])
+  members   PlaygroupMember[]
+  games     Game[]
+
+  @@map("playgroups")
+}
+
+model PlaygroupMember {
+  playgroupId String @map("playgroup_id")
+  playerId    String @map("player_id")
+
+  playgroup Playgroup @relation(fields: [playgroupId], references: [id])
+  player    Player    @relation(fields: [playerId], references: [id])
+
+  @@id([playgroupId, playerId])
+  @@map("playgroup_members")
+}
+
+// ─── Games / Modules ──────────────────────────────────────────────────────────
+
+/// Game module definitions loaded from YAML. Rows are the loaded/active versions.
+model GameModule {
+  id                 String   @id @default(cuid())
+  moduleKey          String   @map("module_key")
+  version            String
+  name               String
+  definition         Json
+  scoringTypeId      String   @map("scoring_type_id")
+  scoringTypeVersion String   @map("scoring_type_version")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@unique([moduleKey, version])
+  @@map("game_modules")
+}
+
+model Game {
+  id                 String     @id @default(cuid())
+  moduleKey          String     @map("module_key")
+  moduleVersion      String     @map("module_version")
+  scoringTypeId      String     @map("scoring_type_id")
+  scoringTypeVersion String     @map("scoring_type_version")
+  playgroupId        String?    @map("playgroup_id")
+  createdById        String     @map("created_by_id")
+  status             GameStatus @default(ACTIVE)
+  config             Json       @default("{}")
+  startedAt          DateTime   @default(now()) @map("started_at")
+  endedAt            DateTime?  @map("ended_at")
+
+  playgroup      Playgroup?      @relation(fields: [playgroupId], references: [id])
+  createdBy      User            @relation(fields: [createdById], references: [id])
+  participations Participation[]
+  events         GameEvent[]
+  scoreStates    ScoreState[]
+  results        GameResult[]
+  tokens         Token[]         @relation("TokenTargetGame")
+
+  @@index([playgroupId])
+  @@index([createdById])
+  @@index([status])
+  @@map("games")
+}
+
+/// One participant slot in a game (player + seat + optional team).
+model Participation {
+  id     String  @id @default(cuid())
+  gameId String  @map("game_id")
+  playerId String @map("player_id")
+  seat   Int
+  team   String?
+
+  game        Game         @relation(fields: [gameId], references: [id])
+  player      Player       @relation(fields: [playerId], references: [id])
+  scoreState  ScoreState?
+  result      GameResult?
+
+  @@unique([gameId, seat])
+  @@index([gameId])
+  @@index([playerId])
+  @@map("participations")
+}
+
+/// Append-only event log. Immutable once written — no updatedAt.
+model GameEvent {
+  id            BigInt  @id @default(autoincrement())
+  gameId        String  @map("game_id")
+  seq           Int
+  authorPlayerId String? @map("author_player_id")
+  type          String
+  payload       Json
+  clientEventId String  @unique @map("client_event_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  game         Game    @relation(fields: [gameId], references: [id])
+  authorPlayer Player? @relation(fields: [authorPlayerId], references: [id])
+
+  @@unique([gameId, seq])
+  @@index([gameId, seq])
+  @@map("game_events")
+}
+
+/// Materialized current score per participation, derived from events.
+model ScoreState {
+  gameId          String   @map("game_id")
+  participationId String   @unique @map("participation_id")
+  payload         Json
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  game          Game          @relation(fields: [gameId], references: [id])
+  participation Participation @relation(fields: [participationId], references: [id])
+
+  @@id([gameId, participationId])
+  @@map("score_states")
+}
+
+/// Normalized outcome per participation — the stats query surface. Never scan game_events for stats.
+model GameResult {
+  id              String   @id @default(cuid())
+  gameId          String   @map("game_id")
+  participationId String   @unique @map("participation_id")
+  rank            Int?
+  didWin          Boolean  @map("did_win")
+  score           Decimal? @db.Decimal(12, 4)
+  normalized      Json     @default("{}")
+
+  game          Game          @relation(fields: [gameId], references: [id])
+  participation Participation @relation(fields: [participationId], references: [id])
+
+  @@index([gameId])
+  @@map("game_results")
+}

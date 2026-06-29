@@ -1,0 +1,206 @@
+name: Publish images
+
+on:
+  push:
+    branches: [dev, main]
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  publish:
+    name: Build & push ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: game-ledger-backend
+            dockerfile: backend/Dockerfile
+          - image: game-ledger-frontend
+            dockerfile: frontend/Dockerfile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/crzykidd/${{ matrix.image }}
+          tags: |
+            # push dev → :dev
+            type=ref,event=branch,enable=${{ github.ref == 'refs/heads/dev' }}
+            # push main → :latest
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            # push (dev or main) → :sha-<short>
+            type=sha,prefix=sha-,format=short,enable=${{ github.event_name == 'push' }}
+            # release → :latest + :<X.Y.Z> + :<major>
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── Retention: keep 30 most-recent sha-* versions ──────────────────────
+      - name: Prune old sha-tagged versions (keep 30)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - << 'PYEOF'
+          import os, json, urllib.request, urllib.error, sys
+
+          TOKEN   = os.environ['GITHUB_TOKEN']
+          OWNER   = 'crzykidd'
+          PACKAGE = '${{ matrix.image }}'
+          KEEP    = 30
+          PROTECTED = {'latest', 'dev'}
+
+          HEADERS = {
+              'Authorization': f'Bearer {TOKEN}',
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+          }
+
+          def gh_get(path):
+              results, page = [], 1
+              while True:
+                  url = f'https://api.github.com{path}?per_page=100&page={page}'
+                  req = urllib.request.Request(url, headers=HEADERS)
+                  try:
+                      with urllib.request.urlopen(req) as r:
+                          batch = json.loads(r.read())
+                  except urllib.error.HTTPError as exc:
+                      if exc.code == 404:
+                          return results   # package not published yet
+                      raise
+                  if not batch:
+                      break
+                  results.extend(batch)
+                  if len(batch) < 100:
+                      break
+                  page += 1
+              return results
+
+          def gh_delete(path):
+              req = urllib.request.Request(
+                  f'https://api.github.com{path}',
+                  headers=HEADERS,
+                  method='DELETE',
+              )
+              try:
+                  urllib.request.urlopen(req)
+              except urllib.error.HTTPError as exc:
+                  print(f'  WARN delete {path}: {exc}', file=sys.stderr)
+
+          def is_protected(tags):
+              return any(t in PROTECTED or t.isdigit() for t in tags)
+
+          versions = gh_get(f'/users/{OWNER}/packages/container/{PACKAGE}/versions')
+          sha_vers = [
+              v for v in versions
+              if any(t.startswith('sha-') for t in v.get('metadata', {}).get('container', {}).get('tags', []))
+              and not is_protected(v.get('metadata', {}).get('container', {}).get('tags', []))
+          ]
+          sha_vers.sort(key=lambda v: v['created_at'], reverse=True)
+          to_delete = sha_vers[KEEP:]
+          print(f'sha-* versions: {len(sha_vers)}, pruning {len(to_delete)} beyond {KEEP}')
+          for v in to_delete:
+              tags = v.get('metadata', {}).get('container', {}).get('tags', [])
+              print(f'  deleting id={v["id"]} tags={tags}')
+              gh_delete(f'/users/{OWNER}/packages/container/{PACKAGE}/versions/{v["id"]}')
+          PYEOF
+
+      # ── Retention: keep 15 most-recent semver (non-major) versions ──────────
+      - name: Prune old semver versions (keep 15)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - << 'PYEOF'
+          import os, json, urllib.request, urllib.error, re, sys
+
+          TOKEN      = os.environ['GITHUB_TOKEN']
+          OWNER      = 'crzykidd'
+          PACKAGE    = '${{ matrix.image }}'
+          KEEP       = 15
+          PROTECTED  = {'latest', 'dev'}
+          SEMVER_RE  = re.compile(r'^\d+\.\d+\.\d+$')
+          MAJOR_RE   = re.compile(r'^\d+$')
+
+          HEADERS = {
+              'Authorization': f'Bearer {TOKEN}',
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+          }
+
+          def gh_get(path):
+              results, page = [], 1
+              while True:
+                  url = f'https://api.github.com{path}?per_page=100&page={page}'
+                  req = urllib.request.Request(url, headers=HEADERS)
+                  try:
+                      with urllib.request.urlopen(req) as r:
+                          batch = json.loads(r.read())
+                  except urllib.error.HTTPError as exc:
+                      if exc.code == 404:
+                          return results
+                      raise
+                  if not batch:
+                      break
+                  results.extend(batch)
+                  if len(batch) < 100:
+                      break
+                  page += 1
+              return results
+
+          def gh_delete(path):
+              req = urllib.request.Request(
+                  f'https://api.github.com{path}',
+                  headers=HEADERS,
+                  method='DELETE',
+              )
+              try:
+                  urllib.request.urlopen(req)
+              except urllib.error.HTTPError as exc:
+                  print(f'  WARN delete {path}: {exc}', file=sys.stderr)
+
+          def is_protected(tags):
+              """Protect: latest, dev, or bare major (e.g. '1', '2')."""
+              return any(t in PROTECTED or MAJOR_RE.match(t) for t in tags)
+
+          versions = gh_get(f'/users/{OWNER}/packages/container/{PACKAGE}/versions')
+          semver_vers = [
+              v for v in versions
+              if any(SEMVER_RE.match(t) for t in v.get('metadata', {}).get('container', {}).get('tags', []))
+              and not is_protected(v.get('metadata', {}).get('container', {}).get('tags', []))
+          ]
+          semver_vers.sort(key=lambda v: v['created_at'], reverse=True)
+          to_delete = semver_vers[KEEP:]
+          print(f'semver versions: {len(semver_vers)}, pruning {len(to_delete)} beyond {KEEP}')
+          for v in to_delete:
+              tags = v.get('metadata', {}).get('container', {}).get('tags', [])
+              print(f'  deleting id={v["id"]} tags={tags}')
+              gh_delete(f'/users/{OWNER}/packages/container/{PACKAGE}/versions/{v["id"]}')
+          PYEOF

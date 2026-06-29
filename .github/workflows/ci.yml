@@ -1,0 +1,226 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [dev, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 1. Lint ─────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm -r run lint
+
+  # ── 2. Config / structured-file parse ───────────────────────────────────────
+  config-parse:
+    name: Config validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate YAML files (modules + compose)
+        run: |
+          python3 - << 'PYEOF'
+          import yaml, glob, sys
+
+          paths = (
+              glob.glob('modules/**/module.yaml', recursive=True)
+              + ['docker-compose.yml', 'docker-compose.dev.yml']
+          )
+          errors = []
+          for path in paths:
+              try:
+                  yaml.safe_load(open(path))
+                  print(f'OK  {path}')
+              except Exception as exc:
+                  errors.append(f'FAIL {path}: {exc}')
+                  print(f'FAIL {path}: {exc}', file=sys.stderr)
+          sys.exit(1 if errors else 0)
+          PYEOF
+
+      - name: Validate JSON files
+        run: |
+          python3 - << 'PYEOF'
+          import json, os, sys
+
+          errors = []
+          skip_dirs = {'.git', 'node_modules', 'dist', '.pnpm'}
+          for root, dirs, files in os.walk('.'):
+              dirs[:] = [d for d in dirs if d not in skip_dirs]
+              for fname in files:
+                  if not fname.endswith('.json'):
+                      continue
+                  path = os.path.join(root, fname)
+                  try:
+                      json.load(open(path))
+                      print(f'OK  {path}')
+                  except Exception as exc:
+                      errors.append(f'FAIL {path}: {exc}')
+                      print(f'FAIL {path}: {exc}', file=sys.stderr)
+          sys.exit(1 if errors else 0)
+          PYEOF
+
+  # ── 3. DB migration check ───────────────────────────────────────────────────
+  migrate-check:
+    name: DB migration check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: gameledger
+          POSTGRES_USER: gameledger
+          POSTGRES_PASSWORD: gameledger
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://gameledger:gameledger@localhost:5432/gameledger
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter backend exec prisma generate
+
+      - name: Deploy migrations
+        run: pnpm --filter backend exec prisma migrate deploy
+
+      - name: Assert schema at head (no drift)
+        run: pnpm --filter backend exec prisma migrate status
+
+  # ── 4. Compose config validation ────────────────────────────────────────────
+  compose-validate:
+    name: Compose config validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose -f docker-compose.yml config -q
+
+      - name: Validate docker-compose.dev.yml
+        run: docker compose -f docker-compose.dev.yml config -q
+
+  # ── 5. Image build — PR only, no push ───────────────────────────────────────
+  image-build:
+    name: Image build check (PR only)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: false
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: false
+
+  # ── 6. Test suite ───────────────────────────────────────────────────────────
+  test:
+    name: Test suite
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: gameledger
+          POSTGRES_USER: gameledger
+          POSTGRES_PASSWORD: gameledger
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://gameledger:gameledger@localhost:5432/gameledger
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter backend exec prisma generate
+
+      - name: Run migrations
+        run: pnpm --filter backend exec prisma migrate deploy
+
+      - name: Backend tests (jest)
+        run: pnpm --filter backend test
+
+      - name: Frontend tests (vitest)
+        run: pnpm --filter frontend test
+
+  # ── 7. SAST — CodeQL ────────────────────────────────────────────────────────
+  codeql:
+    name: CodeQL SAST
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - uses: github/codeql-action/autobuild@v3
+
+      - uses: github/codeql-action/analyze@v3

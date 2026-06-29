@@ -1,0 +1,45 @@
+# Start-of-session handoff — game-ledger
+
+> **Living doc.** The LAST thing to update at the end of every session, the FIRST thing to read
+> at the start of the next. It complements (does not restate) `CLAUDE.md` (standing rules + stack)
+> and `docs/` (design). When you finish a session, update **Current state**, **Last session**,
+> and **Next up** below.
+
+## Read-first pointers
+- `CLAUDE.md` — stack, dev-only workflow, commit conventions (**no Claude/AI mention**), handoff-prompt rules.
+- `docs/spec.md` (concept, deployment, write model, offline), `docs/module-contract.md` (game modules + scoring types + 3-tier UI), `docs/data-model.md` (DB + scale), `docs/user-management.md` (auth/roles), `docs/games/catalog.md` (scoring models), `docs/decisions-needed.md` (locked decisions), `docs/decisions.md` (running decision log).
+- `standards.md` — adopted standards (note: `repo-sandbox-permissions` is intentionally **not** adopted).
+
+## Current state (updated 2026-06-28)
+Working **v0001**. Frontend fully on **Tailwind + shadcn/ui + Framer Motion** (`frontend/src/components/ui/`, `AppShell`); the old hand-rolled design system is **deleted**. Invite-only local auth + admin. **18 playable game modules** (`modules/`), scoring types `numeric_rounds`, `rank_order`, `winner_pick` (in `backend/src/scoring/scoring-type.registry.ts`). Start-New-Game UX uses a sorted **game dropdown** (most-played-first via `playCount`, then alpha) + count-toggle buttons + per-seat player dropdowns (deduplicated). **Module maturity model**: `maturity: released | pre_release` in module YAML; missing = pre-release by default. Picker defaults to **released-only**; a "Show pre-release games" toggle (localStorage-persisted) reveals pre-release games with a `· Pre-release` marker. Empty-state hint when no released games. GamePage shows a "Pre-release" badge for any non-released module. Currently **no game is released** — the default picker list is intentionally empty. **Maintenance module** (`backend/src/maintenance/`) — DB backup/restore via `pg_dump`/`pg_restore`, list/create/download/delete backups, restore from stored or uploaded file (SUPER_ADMIN only). **Maintenance admin UI** (`frontend/src/admin/AdminMaintenance.tsx`) — full "Server Maintenance" admin page. Issue #5 complete. **Cribbage** (`modules/cribbage/module.yaml`) — 18th module; `numeric_rounds`, high-wins, target 121, 2–3 players; pre-release by default (no explicit maturity). **Presentation registry** (`frontend/src/play/presentation/`) — `getBoardComponent(moduleId)` → SVG two-peg leapfrog board with skunk lines at 61/91 and finish at 121. **Capture registry** (`frontend/src/play/capture/`) — `getCaptureComponent(moduleId)` → optional per-game hand-capture component. Cribbage has **live pegging**: every +1/+2/+3 tap or typed add immediately POSTs a `round_score` event and moves the board peg; "End Deal" posts an empty-scores marker that rotates the crib; per-peg undo via "Undo last peg"; game ends mid-deal when any player crosses 121 (win banner with Finish + Undo, no auto-finish). **Running Totals hidden for cribbage** (and any game with a board) — the peg board is the standings view. Global CSS in `ui.css` suppresses native number-input spinners. Dealer derived as deal-offset mod playerCount (from empty-score rounds count), zero persistence. Generic `ScoreForm` QoL: blank input coerces to 0 on Save. Tests: **270 backend / 159 frontend / 20 e2e** (all pass). Repo: `github.com/crzykidd/game-ledger` (public, MIT). Branch `dev`; `main` is PR-gated.
+
+## How to run
+- **App:** `docker compose -f docker-compose.dev.yml up --build` → http://localhost:8088 (or the homelab FQDN **http://crzydev.home.arpa:8088**). First run shows the install wizard. The admin account email is `admin@example.com` (substitute your real admin email; password not known to the assistant).
+- Dev mounts source (hot-reload). **Caveats:** `index.html` is NOT mounted (rebuild to pick up the no-FOUC script); the **module loader runs at backend boot** — restart the backend to load newly added `modules/*/module.yaml`.
+
+## How to verify (don't skip — and don't just relay agent claims)
+- Backend + e2e need Postgres. Use an **isolated** throwaway DB: `docker run -d --name gl-verify-db -e POSTGRES_USER=gameledger -e POSTGRES_PASSWORD=gameledger -e POSTGRES_DB=gameledger_test -p 55432:5432 postgres:16-alpine`, then `cd backend && DATABASE_URL=...55432.../gameledger_test npx prisma migrate deploy`.
+- Backend Jest: that `DATABASE_URL`. **e2e:** Playwright config reads **`E2E_DATABASE_URL`** (not DATABASE_URL) and starts its own backend+vite-preview — `E2E_DATABASE_URL=...55432... pnpm test:e2e`.
+- Node scripts run against the repo need `NODE_PATH=/home/manderse/projects/game-ledger/node_modules`.
+- **Browser-test the live stack** without harming data: never `down -v` the `game-ledger` project; to log in, create a throwaway SUPER_ADMIN via `docker compose -f docker-compose.dev.yml exec -T backend` (node + argon2 + PrismaClient inserting a user + self-player), then delete it after.
+
+## Gotchas that have bitten us
+- **Plain HTTP in dev → secure-context-only browser APIs are undefined** (`crypto.randomUUID`, `navigator.clipboard`, service workers). Always test the FQDN, never use them without an HTTP fallback. (Deferred PWA/offline needs HTTPS.)
+- The dev volume **`db_data_dev` survives `docker compose down -v`** here — a truly fresh wizard needs `docker volume rm`.
+- **Never enable Claude Code sandbox** — `.claude/settings.json` is a broad allowlist so agents run prompt-free; turning sandbox on broke everything and infuriated the user.
+- Test **all games**, not just Skyjo — several bugs hid because every test only played the default module.
+- **Single-file bind mounts don't hot-update** (e.g. `infra/nginx/*.conf` → `default.conf`): editing the host file swaps the inode, so the container keeps serving the old content and `nginx -s reload` is a no-op. **Restart the container** (`docker compose -f docker-compose.dev.yml restart nginx`) to re-bind, then verify with `docker exec … grep`.
+- **Type-only imports from `@game-ledger/contract` must use `import type`/`export type`** or the browser ESM white-screens the whole app (`does not provide an export named 'X'`); Vitest elides them so unit tests won't catch it — load the live app.
+
+## Workflow
+Commit directly on `dev`. Build via **handoff prompts in `prompts/`** dispatched to **Sonnet** agents; **one prompt = one commit** on `dev`; clean Conventional-Commits messages with **no AI mention**. **`main` is PR-gated** — changes reach `main` via a pull request that passes required GitHub Actions CI checks.
+
+## Next up
+- **Stats feature** — make the dashboard stats strip real (win rate, head-to-head, playgroup leaderboards); the data model supports it (`results` + playgroups + module-history rollups).
+- **Cribbage follow-ups** — dealer override UI for v1 flexibility; live multi-device sync caveat (multi-device same game would need polling/SSE).
+- **More per-game visual treatments** — the presentation registry is ready; next game visual to add is at product discretion.
+- **Watch and fix-forward the first GitHub Actions CI run** — workflows are unverified until the first push to `crzykidd/game-ledger`; the orchestrator will iterate on any red check.
+- **Branch protection** — once CI is green on first push, enable required status checks on `main` (all 7 jobs in `ci.yml`) via GitHub repo settings.
+
+## Last session (2026-06-28)
+Prompt 44: **GitHub Actions CI + ghcr publish workflows** — authored `.github/workflows/ci.yml` (7 required PR checks: lint, config-parse, migrate-check, compose-validate, image-build PR-only, test suite, CodeQL SAST) and `.github/workflows/publish.yml` (matrix publish to ghcr.io for `game-ledger-backend` + `game-ledger-frontend`). Publish tags: push `dev` → `:dev`+`:sha-<short>`; push `main` → `:latest`+`:sha-<short>`; release → `:latest`+`:<semver>`+`:<major>`. Inline Python retention scripts prune sha-* beyond 30 and semver beyond 15; latest/dev/major protected. No app code changed. Workflows are **unverified until first push to GitHub** — the orchestrator will watch the first run and fix-forward any red checks. `docs/decisions.md` updated.

@@ -1,0 +1,58 @@
+id: apples-to-apples
+name: Apples to Apples
+version: "1.0.0"
+
+players:
+  min: 4
+  max: 10
+
+scoringType:
+  id: winner_pick
+  version: "1.0.0"
+  config:
+    direction: high
+    aggregate: sum
+
+end:
+  type: target
+  target: 5
+
+result:
+  type: numeric_total
+
+variants:
+  - key: target
+    label: Green cards to win
+    type: integer
+    default: 5
+
+info:
+  summary: |
+    Apples to Apples is a fast-paced card game of wild comparisons. Each round,
+    one player is the judge who reveals a green card (adjective or concept). Other
+    players choose the red card from their hand that best matches. The judge picks
+    the best match, awarding the winner a green card point.
+
+  rules: |
+    ## Apples to Apples Rules
+
+    - One player is the Judge for the round.
+    - The Judge flips over a green apple card showing a word or phrase.
+    - All other players quickly choose the red apple card from their hand that
+      they think the Judge will find the best match and play it face-down.
+    - The Judge shuffles and reads all red cards, then picks the one they like best.
+    - The winner keeps the green card as a point (one Awesome Apple).
+    - The role of Judge rotates clockwise.
+    - First player to reach the target number of green apple cards wins.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    - Target points by player count (recommended):
+      - 4 players: 8 green cards to win
+      - 5 players: 7 green cards to win
+      - 6 players: 6 green cards to win
+      - 7 or more: 5 green cards to win
+    - Each round: the Judge picks ONE winner.
+    - Winner earns +1 green apple (point).
+    - Default target is 5 points (adjust per player count in game settings).

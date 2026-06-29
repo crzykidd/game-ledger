@@ -1,0 +1,109 @@
+/*
+ * Tailwind CSS entry-point — imported once from main.tsx.
+ *
+ * Preflight is DISABLED in tailwind.config.js (no base reset needed since the
+ * hand-rolled style system has been fully retired; keeping preflight off avoids
+ * accidental style regressions on existing markup).
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base reset ────────────────────────────────────────────────────────
+ * Tailwind preflight is DISABLED (see tailwind.config.js), so the browser's
+ * default styles leak through. The retired hand-rolled design system no longer
+ * needs that, but full preflight is a large blast radius — so reset only the
+ * defaults that actually bite in dark mode:
+ *   - body's default 8px margin → a white frame around the dark app shell
+ *   - <button>'s default grey background → light circles on the icon-only nav
+ *     buttons (theme toggle, user menu) in dark mode
+ * Utility classes live in a later layer, so `bg-*` on the Button component and
+ * elsewhere still override the transparent button reset below.
+ */
+@layer base {
+  html,
+  body,
+  #root {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    min-height: 100vh;
+    background-color: theme('colors.slate.50');
+    color: theme('colors.slate.900');
+  }
+
+  [data-theme='dark'] body {
+    background-color: theme('colors.slate.950');
+    color: theme('colors.slate.100');
+  }
+
+  button {
+    background-color: transparent;
+  }
+
+  /* Suppress native number-input spin arrows globally.
+   * Desktop Chrome/Safari renders tiny arrows; mobile Safari hides them entirely
+   * so the only way to increment is via the arrows — which we provide as explicit
+   * +1/+2/+3 buttons. The add field is for arbitrary typed amounts. */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
+/* ── Shared utility layer ──────────────────────────────────────────── */
+@layer utilities {
+  /*
+   * Glass morphism — used by the frosted navbar.
+   * Must be applied inside a container with a defined background color
+   * so the blur has something to work against.
+   */
+  .glass {
+    backdrop-filter: blur(12px) saturate(1.5);
+    -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  }
+
+  /*
+   * Subtle radial gradient mesh for the dashboard page background.
+   * Light: very faint indigo glows; Dark: even fainter.
+   */
+  .gradient-mesh {
+    background:
+      radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
+      radial-gradient(at 50% 0%,  rgba(129, 140, 248, 0.06) 0px, transparent 60%);
+  }
+
+  [data-theme='dark'] .gradient-mesh,
+  .dark .gradient-mesh {
+    background:
+      radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.09) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, rgba(79, 70, 229, 0.06) 0px, transparent 50%),
+      radial-gradient(at 50% 0%,  rgba(129, 140, 248, 0.05) 0px, transparent 60%);
+  }
+
+  /* Skeleton shimmer animation — used by the Skeleton component */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.12) 25%,
+      rgba(148, 163, 184, 0.24) 50%,
+      rgba(148, 163, 184, 0.12) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}

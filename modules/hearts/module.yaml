@@ -1,0 +1,70 @@
+id: hearts
+name: Hearts
+version: "1.0.0"
+
+players:
+  min: 3
+  max: 6
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: low
+    aggregate: sum
+
+end:
+  type: target
+  target: 100
+  finishRound: true
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Penalty Points
+    required: true
+
+variants:
+  - key: target
+    label: Points to end game
+    type: integer
+    default: 100
+
+info:
+  summary: |
+    Hearts is a trick-taking card game where the goal is to have the fewest penalty
+    points. Each heart is worth 1 point and the Queen of Spades is worth 13 points.
+    The game ends when a player reaches 100 points — the player with the lowest total wins.
+
+  rules: |
+    ## Hearts Rules
+
+    - Deal all 52 cards evenly (4 players is standard; adjust for 3 or 5-6).
+    - Before each round, players pass 3 cards to another player (left, right, across,
+      or no pass, rotating each round).
+    - The player with the 2 of Clubs leads the first trick.
+    - Players must follow suit if able; otherwise play any card.
+    - Hearts cannot be led until a heart has been played ("broken").
+    - The player who plays the highest card of the led suit wins the trick and leads next.
+    - After all tricks are played, score your hand.
+    - The game ends when any player reaches or exceeds 100 points.
+    - Player with the lowest total wins.
+
+    **Note — Shoot the Moon:** If one player takes ALL 13 hearts and the Q♠, they
+    score 0 and all opponents score +26. This rule is not tracked by the app —
+    enter the resulting round scores manually (0 for the shooter, +26 for each opponent).
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    - Each **heart**: **+1 point**
+    - **Queen of Spades (Q♠)**: **+13 points**
+    - All other cards: **0 points**
+    - Enter the total penalty points for each player each round.
+    - Lowest cumulative score wins when any player reaches 100.
+
+    **Shoot the Moon (manual):** If one player takes all hearts + Q♠, enter:
+    0 for the shooter and 26 for each other player.

@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://game-ledger/module.schema.json",
+  "title": "GameModuleDefinition",
+  "description": "Schema for game module YAML definitions loaded at startup.",
+  "type": "object",
+  "required": ["id", "name", "version", "players", "scoringType", "end", "result"],
+  "additionalProperties": true,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique module key (e.g. 'skyjo')"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable game name"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semver-style module version"
+    },
+    "players": {
+      "type": "object",
+      "required": ["min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "integer", "minimum": 1 },
+        "max": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "scoringType": {
+      "type": "object",
+      "required": ["id", "version"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "string" },
+        "config": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "direction": { "type": "string", "enum": ["high", "low"] },
+            "aggregate": { "type": "string", "enum": ["sum", "last"] },
+            "roundResolver": { "type": "string" }
+          }
+        }
+      }
+    },
+    "end": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["target", "fixed_rounds", "elimination", "game_defined"]
+        },
+        "target": { "type": "integer" },
+        "finishRound": { "type": "boolean" },
+        "rounds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "result": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["numeric_total", "ranking", "elimination", "chips"]
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "label": { "type": "string" },
+          "required": { "type": "boolean" }
+        }
+      }
+    },
+    "info": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "rules": { "type": "string" },
+        "scoring": { "type": "string" },
+        "summary": { "type": "string" }
+      }
+    },
+    "maturity": {
+      "type": "string",
+      "enum": ["released", "pre_release"],
+      "description": "Module maturity classification. 'released' = stable/polished; only explicitly marked modules are released. Missing or 'pre_release' = under active development, subject to change."
+    }
+  }
+}

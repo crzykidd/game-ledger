@@ -1,0 +1,55 @@
+id: cards-against-humanity
+name: Cards Against Humanity
+version: "1.0.0"
+
+players:
+  min: 3
+  max: 20
+
+scoringType:
+  id: winner_pick
+  version: "1.0.0"
+  config:
+    direction: high
+    aggregate: sum
+
+end:
+  type: target
+  target: 7
+
+result:
+  type: numeric_total
+
+variants:
+  - key: target
+    label: Points to win
+    type: integer
+    default: 7
+
+info:
+  summary: |
+    Cards Against Humanity is a party game for horrible people. Each round, one
+    player is the Card Czar who reads a black card. Everyone else plays their funniest
+    white card answer. The Czar picks the winner, who earns one Awesome Point.
+    First player to the agreed number of Awesome Points wins.
+
+  rules: |
+    ## Cards Against Humanity Rules
+
+    - One player is designated the Card Czar for the round.
+    - The Czar draws and reads a black card (fill-in-the-blank or question).
+    - All other players choose the funniest white card(s) from their hand and play them face-down.
+    - The Czar shuffles and reads all submissions, then picks their favorite.
+    - The winner of the round gets one Awesome Point (the black card as a trophy).
+    - The role of Card Czar rotates to the next player.
+    - Play until the agreed number of points is reached (default: 7).
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    - Each round: the Card Czar picks ONE winner.
+    - Winner earns +1 Awesome Point.
+    - All other players earn 0 points.
+    - First player to reach the target score (default: 7) wins.
+    - Running totals track points accumulated across rounds.
+    - Tied players continue playing until one player is ahead at the end of a round.

@@ -1,0 +1,69 @@
+id: yahtzee
+name: Yahtzee
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 10
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: high
+    aggregate: last
+
+end:
+  type: fixed_rounds
+  rounds: 1
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Final Score
+    required: true
+
+info:
+  summary: |
+    Yahtzee is a dice game where players fill in 13 scoring categories over 13 turns,
+    aiming for the highest total score. Each player rolls up to 3 times per turn and
+    chooses a category to score.
+
+    Simplified entry: after all players complete their 13 categories, enter each player's
+    final total score. The app records the totals and declares the highest total the winner.
+    Category-by-category tracking is not provided — use the physical scoresheet for that.
+
+  rules: |
+    ## Yahtzee Rules
+
+    - Each player takes 13 turns total.
+    - On your turn: roll all 5 dice. You may keep any dice and reroll the rest up to 2
+      more times (3 rolls total).
+    - After your rolls, choose one unfilled category on your scoresheet and enter the score
+      (or enter 0 to scratch a category).
+    - After all 13 categories are filled, total your score (Upper Section + Bonus + Lower Section).
+    - Highest total score wins.
+
+    **Note:** The app does not track individual categories — use the physical Yahtzee
+    scoresheet during play. When the game is complete, enter each player's final total.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    **Upper Section (sum of matching dice):**
+    - Ones through Sixes: sum of that die face
+    - **Upper Bonus:** +35 if Upper Section total ≥ 63
+
+    **Lower Section:**
+    - 3 of a Kind: sum of all 5 dice (if 3+ match)
+    - 4 of a Kind: sum of all 5 dice (if 4+ match)
+    - Full House: **25 pts** (3 of a kind + a pair)
+    - Small Straight (4 in a row): **30 pts**
+    - Large Straight (5 in a row): **40 pts**
+    - Yahtzee (5 of a kind): **50 pts** (+100 per extra Yahtzee)
+    - Chance: sum of all 5 dice (any combination)
+
+    Enter the completed grand total from each player's physical scoresheet.

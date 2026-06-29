@@ -1,0 +1,47 @@
+id: 3up3dn
+name: 3UP 3DOWN
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 6
+
+scoringType:
+  id: rank_order
+  version: "1.0.0"
+
+end:
+  type: game_defined
+
+result:
+  type: ranking
+
+info:
+  summary: |
+    3UP 3DOWN is a shedding card game where players race to empty their hand. Play through
+    your hand cards, then your 3 face-up cards, then your 3 face-down blind cards. First
+    player to empty all cards wins; play continues to fill out the finish order.
+
+  rules: |
+    ## 3UP 3DOWN Rules
+
+    - Each player receives 3 face-down cards (don't look), 3 face-up cards placed on top
+      of the face-down cards, and a hand of cards.
+    - Play cards that are equal to or higher than the top discard pile card.
+    - Special cards: Clear cards wipe the discard pile and you play again.
+    - If you can't play, pick up the entire discard pile.
+    - Once your hand is empty, play from your 3 face-up cards.
+    - Once face-up cards are gone, play your 3 face-down cards blind (flip one at a time).
+    - First player to empty all their cards wins and is out of the round.
+    - Play continues for remaining players to establish the full finish order.
+
+  scoring: |
+    ## Finish Order
+
+    Record the order in which players empty all their cards:
+    - **1st out**: Winner (Rank 1)
+    - **2nd out**: Rank 2
+    - **...continuing...**
+    - **Last with cards**: Last place (Loser)
+
+    No numeric score — rank is the result. For multi-game sessions, track wins per player.

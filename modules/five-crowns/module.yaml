@@ -1,0 +1,83 @@
+id: five-crowns
+name: Five Crowns
+version: "1.0.0"
+
+players:
+  min: 1
+  max: 7
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: low
+    aggregate: sum
+
+end:
+  type: fixed_rounds
+  rounds: 11
+
+result:
+  type: numeric_total
+
+perRoundConfig:
+  - round: 1
+    wildRank: "3s"
+  - round: 2
+    wildRank: "4s"
+  - round: 3
+    wildRank: "5s"
+  - round: 4
+    wildRank: "6s"
+  - round: 5
+    wildRank: "7s"
+  - round: 6
+    wildRank: "8s"
+  - round: 7
+    wildRank: "9s"
+  - round: 8
+    wildRank: "10s"
+  - round: 9
+    wildRank: "Jacks"
+  - round: 10
+    wildRank: "Queens"
+  - round: 11
+    wildRank: "Kings"
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Penalty Points
+    required: true
+
+info:
+  summary: |
+    Five Crowns is a rummy-style game played over exactly 11 rounds. Each round has a
+    different wild rank (3s through Kings). Score as few penalty points as possible.
+    Lowest total after 11 rounds wins.
+
+  rules: |
+    ## Five Crowns Rules
+
+    - Played over exactly 11 rounds.
+    - Round N deals N+2 cards to each player (Round 1: 3 cards, Round 11: 13 cards).
+    - Each round has a rotating wild: Round 1=3s, Round 2=4s, ... Round 11=Kings.
+    - Jokers are always wild.
+    - On your turn, draw from the deck or discard pile, then discard one card.
+    - Form melds: books (3+ of same rank) or runs (3+ consecutive in same suit).
+    - When a player "goes out" (melds all cards), others get one final turn.
+    - Score unmelded cards left in your hand as penalty points.
+    - Lowest total after Round 11 wins.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    - Number cards (3–10): face value
+    - Jacks: **11 points**
+    - Queens: **12 points**
+    - Kings: **13 points**
+    - Jokers: **50 points**
+    - The round's **wild rank**: **20 points** (if unmelded)
+    - Melded cards: **0 points**
+    - Going out clean: **0 points**
+    - Lowest cumulative score after 11 rounds wins.

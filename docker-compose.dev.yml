@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: gameledger
+      POSTGRES_USER: gameledger
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gameledger}
+    volumes:
+      - ./private_data/postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gameledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.dev
+    environment:
+      DATABASE_URL: postgresql://gameledger:${POSTGRES_PASSWORD:-gameledger}@db:5432/gameledger
+      PORT: 3001
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-dev}
+      NODE_ENV: development
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backend/src:/app/backend/src
+      - ./packages/contract/src:/app/packages/contract/src
+      - ./modules:/app/modules
+      - ${BACKUP_HOST_DIR:-./private_data/backups}:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.dev
+    environment:
+      VITE_API_URL: http://localhost:${DEV_APP_PORT:-8088}
+      # Tell Vite's HMR client to connect back through the nginx ingress port,
+      # not the internal Vite port. nginx proxies websocket upgrades on / → frontend:5173.
+      VITE_HMR_CLIENT_PORT: ${DEV_APP_PORT:-8088}
+    volumes:
+      - ./frontend/src:/app/frontend/src
+      - ./packages/contract/src:/app/packages/contract/src
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${DEV_APP_PORT:-8088}:80"
+    volumes:
+      - ./infra/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+

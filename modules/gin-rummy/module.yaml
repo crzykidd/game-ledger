@@ -1,0 +1,72 @@
+id: gin-rummy
+name: Gin Rummy
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 2
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: high
+    aggregate: sum
+
+end:
+  type: target
+  target: 100
+  finishRound: false
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Hand Points
+    required: true
+
+variants:
+  - key: target
+    label: Points to win
+    type: integer
+    default: 100
+
+info:
+  summary: |
+    Gin Rummy is a 2-player card game where you form melds (sets and runs) to minimize
+    your deadwood. Knock when your deadwood is 10 or fewer, or go gin for 0 deadwood.
+    First player to accumulate 100 points wins.
+
+    Simplified scoring: enter the hand points earned this round for each player (one player
+    earns points, the other earns 0, unless there is an undercut). End-game bonuses (box
+    bonuses, game bonus, shutout) are applied at game end — enter them in the final round.
+
+  rules: |
+    ## Gin Rummy Rules
+
+    - Deal 10 cards to each player. The next card is turned face-up to start the discard pile.
+    - On your turn: draw from the deck or the top discard, then discard one card.
+    - Form melds: sets (3–4 of the same rank) or runs (3+ consecutive in same suit).
+    - **Knock:** When your unmelded cards (deadwood) total 10 or fewer, discard face-down
+      and reveal your hand. Your opponent may add unmatched cards to your melds (layoff).
+    - **Gin:** If you have 0 deadwood, knock for a gin bonus.
+    - Score the hand and start a new one.
+    - First to 100 points wins.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    **Per hand (enter in Round Points field):**
+    - **Knock:** Knocker scores = opponent's deadwood − knocker's deadwood
+    - **Undercut** (opponent's deadwood ≤ knocker's): opponent scores difference **+ 25 pts**
+    - **Gin:** Knocker scores opponent's full deadwood **+ 25 pts**
+
+    **End-game bonuses (enter in final round as extra points for winner):**
+    - **Box/line bonus:** +25 per hand won
+    - **Game bonus:** +100 for winning the game
+    - **Shutout/skunk:** Double all scores if opponent never knocked
+
+    Enter the points earned this hand for each player (knocker/winner earns points,
+    loser enters 0 — unless undercut). First to 100 wins.

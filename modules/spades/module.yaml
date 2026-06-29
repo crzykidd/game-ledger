@@ -1,0 +1,73 @@
+id: spades
+name: Spades
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 4
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: high
+    aggregate: sum
+
+end:
+  type: target
+  target: 500
+  finishRound: true
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Round Points
+    required: true
+
+variants:
+  - key: target
+    label: Points to win
+    type: integer
+    default: 500
+
+info:
+  summary: |
+    Spades is a trick-taking card game where players bid how many tricks they expect to
+    take each round. Making or exceeding your bid earns points; missing it loses points.
+    First player or team to 500 points wins.
+
+    Simplified scoring: enter the net points earned this round (bid × 10 if made,
+    −bid × 10 if set, plus any overtricks). Bag penalties (every 10 overtricks = −100)
+    are not automatically tracked — apply them manually if your group uses this rule.
+
+  rules: |
+    ## Spades Rules
+
+    - Deal all 52 cards evenly (13 each for 4 players). Spades are always trump.
+    - Each player bids the number of tricks they expect to take.
+    - Play tricks: lead any card, follow suit if possible, otherwise play any card.
+      The highest spade wins (if any played); otherwise the highest card of the led suit.
+    - The bidder with the most tricks in their hand at round end scores their bid.
+    - Score the round and enter the net points for each player.
+
+    **Note — Bags:** Overtricks ("bags") score +1 point each but accumulate. Every 10 bags
+    costs −100 points (the "sandbag" penalty). The app does not track bags automatically —
+    enter adjusted scores manually each round if your group enforces this rule.
+
+    **Nil and Blind Nil:** Bidding 0 (nil) earns +100 if successful or −100 if you take
+    any trick. Apply these bonuses/penalties manually in the round score you enter.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    **Per round:**
+    - Made your bid: **bid × 10 points** + **1 point per overtrick (bag)**
+    - Failed to make bid (set): **−bid × 10 points**
+    - Nil bid (0): **+100** if made, **−100** if broken
+    - Blind Nil: **+200** if made, **−200** if broken
+
+    Enter the net round score for each player (or team, entering the same score for
+    both teammates). First to 500 wins.

@@ -1,0 +1,24 @@
+FROM node:24-alpine
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+
+# openssl is required by the Prisma query engine (linux-musl binary targets need it)
+# postgresql16-client provides pg_dump / pg_restore / psql for the maintenance module
+RUN apk add --no-cache openssl postgresql16-client
+
+COPY package.json pnpm-workspace.yaml tsconfig.base.json .npmrc ./
+COPY packages/contract/package.json ./packages/contract/
+COPY backend/package.json ./backend/
+
+RUN pnpm install
+
+COPY packages/contract ./packages/contract
+COPY backend ./backend
+
+RUN pnpm --filter @game-ledger/contract build
+
+# Generate the Prisma client against the installed OpenSSL version
+RUN cd /app/backend && npx prisma generate
+
+WORKDIR /app/backend
+CMD ["sh", "-c", "npx prisma migrate deploy && pnpm dev"]

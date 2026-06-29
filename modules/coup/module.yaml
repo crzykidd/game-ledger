@@ -1,0 +1,49 @@
+id: coup
+name: Coup
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 6
+
+scoringType:
+  id: rank_order
+  version: "1.0.0"
+
+end:
+  type: game_defined
+
+result:
+  type: ranking
+
+info:
+  summary: |
+    Coup is a bluffing card game where players use influence cards to take actions,
+    bluff their way through challenges, and eliminate opponents' influence. The last
+    player with at least one influence card remaining wins.
+
+  rules: |
+    ## Coup Rules
+
+    - Each player starts with 2 face-down influence cards and 2 coins.
+    - On your turn, take one action (you may bluff any character you don't have).
+    - **Actions:** Income (+1 coin), Foreign Aid (+2 coins), Tax (Duke, +3 coins),
+      Steal (Captain, take 2 coins from another), Exchange (Ambassador, swap cards),
+      Assassinate (Assassin, pay 3 coins, force player to lose influence),
+      Coup (pay 7 coins, force player to lose influence — cannot be blocked).
+    - Other players may **challenge** your claimed character or **block** your action.
+    - Losing a challenge or being successfully assassinated/couped = lose one influence
+      (flip a card face-up).
+    - Lose both influence cards = eliminated.
+    - Last player remaining wins.
+
+  scoring: |
+    ## Finish Order (Elimination Order)
+
+    Record the order players are eliminated:
+    - **Last standing**: Winner (Rank 1)
+    - **2nd-to-last eliminated**: Rank 2
+    - **...continuing...**
+    - **First eliminated**: Last rank
+
+    No numeric score — rank is determined by survival order.

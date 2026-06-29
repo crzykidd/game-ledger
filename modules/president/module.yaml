@@ -1,0 +1,49 @@
+id: president
+name: President
+version: "1.0.0"
+
+players:
+  min: 3
+  max: 8
+
+scoringType:
+  id: rank_order
+  version: "1.0.0"
+  # President is rank-only: finish order IS the result. No pointsMap, so no
+  # numeric Score column on the results page (the rank_order scoring type still
+  # supports an optional pointsMap for modules that assign points by rank, e.g.
+  # Tichu — see scoring-type.registry.ts).
+
+end:
+  type: game_defined
+
+result:
+  type: ranking
+
+info:
+  summary: |
+    President (also called Asshole or Scum) is a shedding card game where players
+    race to empty their hand. Finish order determines rank — first out is President,
+    last is Asshole. No numeric score needed; rank is the result.
+
+  rules: |
+    ## President Rules
+
+    - Deal all cards evenly (some players may get one extra card).
+    - On your turn, play a card or set of cards higher than the previous play, or pass.
+    - The first player to empty their hand is the President (rank 1).
+    - Play continues for remaining players to determine full finishing order.
+    - The last player to empty their hand is the Asshole (last rank).
+    - In subsequent rounds, card exchanges happen: Asshole gives best cards to President,
+      and President gives worst cards to Asshole (VP/Secretary exchanges vary by house rules).
+
+  scoring: |
+    ## Finish Positions
+
+    - **President** (1st) — 3 points (optional)
+    - **Vice President** (2nd) — 2 points (optional)
+    - **Neutral** (middle) — 1 point (optional)
+    - **Asshole** (last) — 0 points (optional)
+
+    Points are optional; the primary result is the finish order ranking.
+    Record the finish order and the app assigns ranks 1 through N.

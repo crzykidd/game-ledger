@@ -1,0 +1,54 @@
+id: uno
+name: Uno
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 10
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: high
+    aggregate: sum
+
+end:
+  type: target
+  target: 500
+  finishRound: true
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Round Score
+    required: true
+
+info:
+  summary: |
+    Uno is a card game where the first player to empty their hand each round scores
+    points from opponents' remaining cards. First player to 500 total points wins.
+
+  rules: |
+    ## Uno Rules
+
+    - Deal 7 cards to each player. Place the top card of the draw pile face-up to start the discard pile.
+    - On your turn, play a card matching the top card's color or number, or play a Wild card.
+    - Special cards: Skip, Reverse, Draw Two affect play order.
+    - Wild and Wild Draw Four can be played on any card.
+    - Say "Uno!" when you have one card left, or draw 2 penalty cards if caught.
+    - The first player to empty their hand wins the round and scores points from opponents.
+    - Play continues until a player reaches 500 points total.
+    - Highest score wins.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    - Number cards: face value (0–9)
+    - Draw Two / Reverse / Skip: **20 points**
+    - Wild / Wild Draw Four: **50 points**
+    - The round winner scores the total value of all other players' remaining cards.
+    - First player to 500 points wins the game.

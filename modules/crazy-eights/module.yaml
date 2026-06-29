@@ -1,0 +1,64 @@
+id: crazy-eights
+name: Crazy Eights
+version: "1.0.0"
+
+players:
+  min: 2
+  max: 6
+
+scoringType:
+  id: numeric_rounds
+  version: "1.0.0"
+  config:
+    direction: high
+    aggregate: sum
+
+end:
+  type: target
+  target: 100
+  finishRound: false
+
+result:
+  type: numeric_total
+
+fields:
+  - name: roundScore
+    type: integer
+    label: Hand Points
+    required: true
+
+variants:
+  - key: target
+    label: Points to win
+    type: integer
+    default: 100
+
+info:
+  summary: |
+    Crazy Eights is a shedding card game where the first player to empty their hand
+    wins each round and collects points equal to the cards remaining in opponents'
+    hands. First player to accumulate 100 points wins.
+
+  rules: |
+    ## Crazy Eights Rules
+
+    - Deal 5 cards to each player (7 cards for 2 players). Turn up the top card of the
+      remaining deck to form the discard pile.
+    - On your turn, play a card that matches the rank or suit of the top discard, OR play
+      an Eight to change the suit to anything you declare.
+    - If you cannot play, draw from the deck until you can (or pass if the deck is empty).
+    - First player to empty their hand wins the round.
+    - Score points for the cards remaining in other players' hands (winner collects).
+    - First to 100 points wins.
+
+  scoring: |
+    ## Scoring Quick Reference
+
+    **Card values (for cards remaining in opponents' hands):**
+    - **Eights**: **50 points each**
+    - **Face cards (K, Q, J)**: **10 points each**
+    - **Aces**: **1 point each**
+    - **Number cards (2–10)**: **face value**
+
+    The round winner enters the total points collected from all opponents' remaining cards.
+    All other players enter 0. First to 100 wins.

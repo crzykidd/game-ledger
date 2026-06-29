@@ -1,0 +1,16 @@
+{
+  "name": "game-ledger",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel -r run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
+    "test:e2e": "playwright test",
+    "prisma:migrate": "pnpm --filter backend prisma:migrate"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "prettier": "^3.3.3"
+  }
+}
