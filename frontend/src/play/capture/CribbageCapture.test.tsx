@@ -8,9 +8,7 @@ function makeParticipations(ids: string[], totals?: Record<string, number>) {
     id,
     seat: i,
     player: { id: `player-${id}`, nickname: `Player${i + 1}`, userId: null },
-    scoreState: totals
-      ? { payload: { rounds: [], totals } }
-      : null,
+    scoreState: totals ? { payload: { rounds: [], totals } } : null,
   }));
 }
 
@@ -80,9 +78,7 @@ describe('CribbageCapture: crib label', () => {
 describe('CribbageCapture: dealer chip', () => {
   it('shows Dealer/Crib badge on the dealer player panel', () => {
     const participations = makeParticipations(['p1', 'p2', 'p3']);
-    render(
-      <CribbageCapture {...defaultProps({ participations, currentDeal: 1 })} />,
-    );
+    render(<CribbageCapture {...defaultProps({ participations, currentDeal: 1 })} />);
     // Deal 1 → seat 0 = p1
     expect(screen.getByTestId('dealer-chip-p1')).toBeInTheDocument();
     expect(screen.queryByTestId('dealer-chip-p2')).not.toBeInTheDocument();
@@ -91,9 +87,7 @@ describe('CribbageCapture: dealer chip', () => {
 
   it('dealer chip on seat 1 for deal 2', () => {
     const participations = makeParticipations(['p1', 'p2', 'p3']);
-    render(
-      <CribbageCapture {...defaultProps({ participations, currentDeal: 2 })} />,
-    );
+    render(<CribbageCapture {...defaultProps({ participations, currentDeal: 2 })} />);
     expect(screen.queryByTestId('dealer-chip-p1')).not.toBeInTheDocument();
     expect(screen.getByTestId('dealer-chip-p2')).toBeInTheDocument();
   });

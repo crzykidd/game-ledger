@@ -210,14 +210,15 @@ export function StartGamePage() {
                 <option value="">— Select a game —</option>
                 {visibleModules.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.name} ({m.players.min}–{m.players.max}){m.maturity !== 'released' ? ' · Pre-release' : ''}
+                    {m.name} ({m.players.min}–{m.players.max})
+                    {m.maturity !== 'released' ? ' · Pre-release' : ''}
                   </option>
                 ))}
               </select>
               {visibleModules.length === 0 && !showPreRelease && (
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                  No released games yet — turn on{' '}
-                  <em>Show pre-release games</em> to see games in development.
+                  No released games yet — turn on <em>Show pre-release games</em> to see games in
+                  development.
                 </p>
               )}
               <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mt-3 cursor-pointer select-none">

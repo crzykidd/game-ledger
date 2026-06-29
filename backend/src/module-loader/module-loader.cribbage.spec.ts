@@ -10,11 +10,7 @@
  */
 import * as path from 'path';
 import { ModuleLoaderService } from './module-loader.service';
-import {
-  getScoringType,
-  RoundEntry,
-  ScoringTypeConfig,
-} from '../scoring/scoring-type.registry';
+import { getScoringType, RoundEntry, ScoringTypeConfig } from '../scoring/scoring-type.registry';
 
 const MODULES_DIR = path.resolve(__dirname, '../../../modules');
 

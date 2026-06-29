@@ -194,7 +194,7 @@ describe('CribbageBoard: peg positions', () => {
     expect(screen.queryByTestId('rear-peg-part-2')).not.toBeInTheDocument();
   });
 
-  it('rear peg uses each player\'s own last non-zero increment (interleaved pegs + empty deal marker)', () => {
+  it("rear peg uses each player's own last non-zero increment (interleaved pegs + empty deal marker)", () => {
     // Rounds:
     //   1: p1 pegs 5          p1 total: 5
     //   2: p2 pegs 3          p2 total: 3
@@ -212,7 +212,7 @@ describe('CribbageBoard: peg positions', () => {
       { round: 1, scores: { 'part-1': 5 } },
       { round: 2, scores: { 'part-2': 3 } },
       { round: 3, scores: { 'part-1': 2 } },
-      { round: 4, scores: {} },               // End Deal marker
+      { round: 4, scores: {} }, // End Deal marker
       { round: 5, scores: { 'part-2': 4 } },
     ];
     const totals = { 'part-1': 7, 'part-2': 7 };
@@ -457,16 +457,14 @@ describe('CribbageBoard: GamePage integration', () => {
       version: 5,
       createdById: 'user-1',
       participations: [
-        makeParticipation(
-          'part-1', 0, 'alice',
-          [{ round: 1, scores: { 'part-1': 121 } }],
-          { 'part-1': 121, 'part-2': 40 },
-        ),
-        makeParticipation(
-          'part-2', 1, 'bob',
-          [{ round: 1, scores: { 'part-1': 121 } }],
-          { 'part-1': 121, 'part-2': 40 },
-        ),
+        makeParticipation('part-1', 0, 'alice', [{ round: 1, scores: { 'part-1': 121 } }], {
+          'part-1': 121,
+          'part-2': 40,
+        }),
+        makeParticipation('part-2', 1, 'bob', [{ round: 1, scores: { 'part-1': 121 } }], {
+          'part-1': 121,
+          'part-2': 40,
+        }),
       ],
     };
 
@@ -498,7 +496,9 @@ describe('CribbageBoard: GamePage integration', () => {
       createdById: 'user-1',
       participations: [
         makeParticipation(
-          'part-1', 0, 'alice',
+          'part-1',
+          0,
+          'alice',
           [
             { round: 1, scores: { 'part-1': 3 } },
             { round: 2, scores: { 'part-2': 2 } },
@@ -506,7 +506,9 @@ describe('CribbageBoard: GamePage integration', () => {
           { 'part-1': 3, 'part-2': 2 },
         ),
         makeParticipation(
-          'part-2', 1, 'bob',
+          'part-2',
+          1,
+          'bob',
           [
             { round: 1, scores: { 'part-1': 3 } },
             { round: 2, scores: { 'part-2': 2 } },
@@ -534,8 +536,14 @@ describe('CribbageBoard: GamePage integration', () => {
           json: async () => ({
             version: 4,
             scoreStates: [
-              { participationId: 'part-1', payload: { rounds: [], totals: { 'part-1': 4, 'part-2': 2 } } },
-              { participationId: 'part-2', payload: { rounds: [], totals: { 'part-1': 4, 'part-2': 2 } } },
+              {
+                participationId: 'part-1',
+                payload: { rounds: [], totals: { 'part-1': 4, 'part-2': 2 } },
+              },
+              {
+                participationId: 'part-2',
+                payload: { rounds: [], totals: { 'part-1': 4, 'part-2': 2 } },
+              },
             ],
           }),
         };
@@ -587,16 +595,14 @@ describe('CribbageBoard: GamePage integration', () => {
       version: 2,
       createdById: 'user-1',
       participations: [
-        makeParticipation(
-          'part-1', 0, 'alice',
-          [{ round: 1, scores: { 'part-1': 5 } }],
-          { 'part-1': 5, 'part-2': 0 },
-        ),
-        makeParticipation(
-          'part-2', 1, 'bob',
-          [{ round: 1, scores: { 'part-1': 5 } }],
-          { 'part-1': 5, 'part-2': 0 },
-        ),
+        makeParticipation('part-1', 0, 'alice', [{ round: 1, scores: { 'part-1': 5 } }], {
+          'part-1': 5,
+          'part-2': 0,
+        }),
+        makeParticipation('part-2', 1, 'bob', [{ round: 1, scores: { 'part-1': 5 } }], {
+          'part-1': 5,
+          'part-2': 0,
+        }),
       ],
     };
 
@@ -617,8 +623,26 @@ describe('CribbageBoard: GamePage integration', () => {
           json: async () => ({
             version: 3,
             scoreStates: [
-              { participationId: 'part-1', payload: { rounds: [{ round: 1, scores: { 'part-1': 5 } }, { round: 2, scores: {} }], totals: { 'part-1': 5, 'part-2': 0 } } },
-              { participationId: 'part-2', payload: { rounds: [{ round: 1, scores: { 'part-1': 5 } }, { round: 2, scores: {} }], totals: { 'part-1': 5, 'part-2': 0 } } },
+              {
+                participationId: 'part-1',
+                payload: {
+                  rounds: [
+                    { round: 1, scores: { 'part-1': 5 } },
+                    { round: 2, scores: {} },
+                  ],
+                  totals: { 'part-1': 5, 'part-2': 0 },
+                },
+              },
+              {
+                participationId: 'part-2',
+                payload: {
+                  rounds: [
+                    { round: 1, scores: { 'part-1': 5 } },
+                    { round: 2, scores: {} },
+                  ],
+                  totals: { 'part-1': 5, 'part-2': 0 },
+                },
+              },
             ],
           }),
         };

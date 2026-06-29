@@ -1,4 +1,12 @@
-import { Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, Optional, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  Optional,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
@@ -9,7 +17,10 @@ import * as path from 'path';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
-import { UpdateMaintenanceSettingsDto, validateCronExpression } from './update-maintenance-settings.dto';
+import {
+  UpdateMaintenanceSettingsDto,
+  validateCronExpression,
+} from './update-maintenance-settings.dto';
 import { MaintenanceKind, MaintenanceSettings } from '@game-ledger/contract';
 
 const execFileAsync = promisify(execFile);
@@ -124,13 +135,14 @@ export class MaintenanceService implements OnModuleInit {
     schedulerRegistry?: SchedulerRegistry | SchedulerRegistryAdapter,
   ) {
     this.backupDir = this.config.get<string>('BACKUP_DIR') ?? '/backups';
-    this.databaseUrl =
-      this.config.get<string>('DATABASE_URL') ?? process.env.DATABASE_URL ?? '';
+    this.databaseUrl = this.config.get<string>('DATABASE_URL') ?? process.env.DATABASE_URL ?? '';
     this.exec = execRunner ?? defaultExecRunner;
     this.fsAdapter = fsAdapter ?? defaultFsAdapter;
     this.schedulerAdapter = (schedulerRegistry as SchedulerRegistryAdapter) ?? {
       doesExist: () => false,
-      getCronJob: () => { throw new Error('no job'); },
+      getCronJob: () => {
+        throw new Error('no job');
+      },
       deleteCronJob: () => {},
       addCronJob: () => {},
     };
@@ -414,10 +426,7 @@ export class MaintenanceService implements OnModuleInit {
    * @param actor   The user triggering the backup (null actorUserId for scheduled runs).
    * @param extraMeta Additional audit metadata (e.g., `{ source: 'schedule' }`).
    */
-  async createBackup(
-    actor: User,
-    extraMeta: Record<string, unknown> = {},
-  ): Promise<BackupMeta> {
+  async createBackup(actor: User, extraMeta: Record<string, unknown> = {}): Promise<BackupMeta> {
     this.ensureBackupDir();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `gameledger-${timestamp}.dump`;

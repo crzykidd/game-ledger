@@ -235,7 +235,10 @@ function RestoreUploadSection() {
       </h2>
       <p className="text-sm text-slate-500 dark:text-slate-400">
         Upload a <code className="font-mono text-xs">.dump</code> file to restore the database.
-        <strong className="text-red-600 dark:text-red-400"> This overwrites all current data.</strong>
+        <strong className="text-red-600 dark:text-red-400">
+          {' '}
+          This overwrites all current data.
+        </strong>
       </p>
       <div className="flex flex-wrap gap-3 items-center">
         <input
@@ -354,7 +357,9 @@ function SettingsSection() {
             className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 accent-indigo-600"
             aria-label="Backup enabled"
           />
-          <span className="text-sm text-slate-700 dark:text-slate-200">Enable scheduled backups</span>
+          <span className="text-sm text-slate-700 dark:text-slate-200">
+            Enable scheduled backups
+          </span>
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
@@ -419,7 +424,9 @@ function SettingsSection() {
             className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 accent-indigo-600"
             aria-label="Reindex enabled"
           />
-          <span className="text-sm text-slate-700 dark:text-slate-200">Enable scheduled reindex</span>
+          <span className="text-sm text-slate-700 dark:text-slate-200">
+            Enable scheduled reindex
+          </span>
         </label>
         <div className="flex flex-col gap-1">
           <label
@@ -476,7 +483,10 @@ function RunMaintenanceSection() {
     try {
       const result = await runMaintenance(kind);
       setLastResult(result);
-      toast(`${kind === 'vacuum' ? 'Vacuum' : 'Reindex'} completed in ${result.durationMs}ms`, 'success');
+      toast(
+        `${kind === 'vacuum' ? 'Vacuum' : 'Reindex'} completed in ${result.durationMs}ms`,
+        'success',
+      );
     } catch (err) {
       const msg = err instanceof ApiClientError ? err.message : `Failed to run ${kind}`;
       toast(msg, 'error');
@@ -510,8 +520,9 @@ function RunMaintenanceSection() {
       </div>
       {lastResult && (
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Last run: <span className="font-medium text-slate-700 dark:text-slate-200">{lastResult.kind}</span>
-          {' '}— {lastResult.durationMs}ms at {new Date(lastResult.completedAt).toLocaleString()}
+          Last run:{' '}
+          <span className="font-medium text-slate-700 dark:text-slate-200">{lastResult.kind}</span>{' '}
+          — {lastResult.durationMs}ms at {new Date(lastResult.completedAt).toLocaleString()}
         </p>
       )}
     </div>

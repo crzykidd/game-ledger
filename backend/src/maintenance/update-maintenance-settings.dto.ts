@@ -1,11 +1,4 @@
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-  ValidateIf,
-} from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, Min, ValidateIf } from 'class-validator';
 import { BadRequestException } from '@nestjs/common';
 
 /**
@@ -33,7 +26,9 @@ export class UpdateMaintenanceSettingsDto {
    * Validated as a 5-field cron expression when non-null.
    */
   @IsOptional()
-  @ValidateIf((o: UpdateMaintenanceSettingsDto) => o.backupCron !== null && o.backupCron !== undefined)
+  @ValidateIf(
+    (o: UpdateMaintenanceSettingsDto) => o.backupCron !== null && o.backupCron !== undefined,
+  )
   @IsString()
   backupCron?: string | null;
 
@@ -51,7 +46,9 @@ export class UpdateMaintenanceSettingsDto {
    * Validated as a 5-field cron expression when non-null.
    */
   @IsOptional()
-  @ValidateIf((o: UpdateMaintenanceSettingsDto) => o.reindexCron !== null && o.reindexCron !== undefined)
+  @ValidateIf(
+    (o: UpdateMaintenanceSettingsDto) => o.reindexCron !== null && o.reindexCron !== undefined,
+  )
   @IsString()
   reindexCron?: string | null;
 }

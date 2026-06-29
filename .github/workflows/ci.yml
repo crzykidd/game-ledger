@@ -15,6 +15,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -35,6 +36,7 @@ jobs:
   config-parse:
     name: Config validation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -84,6 +86,7 @@ jobs:
   migrate-check:
     name: DB migration check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16-alpine
@@ -127,6 +130,7 @@ jobs:
   compose-validate:
     name: Compose config validation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -140,6 +144,7 @@ jobs:
   image-build:
     name: Image build check (PR only)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
@@ -164,6 +169,7 @@ jobs:
   test:
     name: Test suite
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16-alpine
@@ -210,6 +216,7 @@ jobs:
   codeql:
     name: CodeQL SAST
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       security-events: write
       actions: read

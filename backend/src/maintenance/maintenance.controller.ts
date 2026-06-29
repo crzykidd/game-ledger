@@ -63,10 +63,7 @@ export class MaintenanceController {
   @Put('settings')
   @UseGuards(CsrfGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  updateSettings(
-    @Body() dto: UpdateMaintenanceSettingsDto,
-    @CurrentUser() actor: User,
-  ) {
+  updateSettings(@Body() dto: UpdateMaintenanceSettingsDto, @CurrentUser() actor: User) {
     return this.maintenanceService.updateSettings(dto, actor);
   }
 
@@ -91,10 +88,7 @@ export class MaintenanceController {
   @UseGuards(CsrfGuard)
   @HttpCode(200)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  runMaintenance(
-    @Body() dto: RunMaintenanceDto,
-    @CurrentUser() actor: User,
-  ) {
+  runMaintenance(@Body() dto: RunMaintenanceDto, @CurrentUser() actor: User) {
     return this.maintenanceService.runMaintenance(dto.kind, actor);
   }
 
