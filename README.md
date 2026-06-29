@@ -150,7 +150,7 @@ Full design docs live in [`docs/`](docs/):
 
 See [CHANGELOG.md](CHANGELOG.md) for the full history.
 
-### v0.1.0
+### v0.1.0 (2026-06-29)
 
 Initial public release — 18 game modules including a live Cribbage peg board,
 invite-only local auth, admin controls and Server Maintenance, Tailwind/shadcn/ui

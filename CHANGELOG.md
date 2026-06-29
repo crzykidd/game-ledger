@@ -16,7 +16,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [0.1.0] — <DATE>
+## [0.1.0] — 2026-06-29
 
 Initial public release of game-ledger — a self-hosted, mobile-first app for
 tracking game scores over time.
