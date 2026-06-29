@@ -146,21 +146,25 @@ delivered. The "still deferred" items (offline/PWA, multiple modules, etc.) rema
   2FA; multi-editor live scoring; team scoring (Spades/Canasta); co-op result mode (Codenames);
   `game_events` partitioning/archival; leaderboard public-link expiry specifics.
 
-- **In-app "Give feedback" → GitHub issue (post-v0.1.0).** A "Give feedback" button on every page
-  (mounted in `AppShell`) that captures a screenshot of the current page plus the user's note and
-  files it as an issue. **Trigger/timing:** at the **v0.1.0** release we move active development from
-  Gitea to **GitHub** (see the P4 "switch-to-dev" track / the GitHub-compatible-CI note above); build
-  this feature *then*, using the **`gh`** CLI / GitHub issues API — not before. Design notes from the
-  2026-06-28 discussion to carry forward:
-  - Capture the page with **`html2canvas`** (DOM→canvas). The browser's native screen-capture API
-    (`getDisplayMedia`) is **unavailable in dev** — the homelab dev stack is plain HTTP, so
-    secure-context-only APIs don't exist; html2canvas needs no secure context.
-  - `POST /api/feedback` backed by an **in-app feedback store + admin inbox** as the reliable
-    backbone (never lose feedback if the token is wrong / GitHub is down), with **GitHub-issue
-    creation layered on top** once a repo + token are configured in admin settings (reuse the
-    maintenance/settings infra).
-  - Auto-tag the issue with the current page/route, the active game **module + maturity** — pairs
-    naturally with the In-Dev module badge (in-dev games are where feedback matters most).
+- **In-app "Give feedback" feature — PAUSED, revisit later (NOT in v0.1.0).** A "Give feedback"
+  button that captures a page screenshot + the user's note. **Status (2026-06-29):** the **backend was
+  built** (commit `b60acd2`: `Feedback` model + migration, settings singleton, a native-`fetch`
+  GitHub-issue service, and the `/api/feedback` + admin endpoints) but is **dormant** — there is **no
+  frontend**, and GitHub forwarding is optional/unconfigured, so nothing exercises it. The full design
+  is in `docs/decisions.md` (2026-06-28 plan entry). **Paused at the user's call** because the scope is
+  heavier than the value for a first release. **Revisit considerations when picked back up:**
+  - **De-risk the scope.** Strongly consider shipping **in-app inbox only** first (button + screenshot
+    + admin Feedback inbox), with GitHub-issue forwarding as a later opt-in toggle — the backend
+    already supports this split.
+  - **Public-exposure problem.** This repo is **public**, so feedback text + screenshots filed as
+    issues would be world-readable. If GitHub forwarding is enabled, point it at a **private** repo, or
+    keep feedback in-app only.
+  - **Unverified machinery.** The screenshot-into-issue path (upload PNG to a `feedback-assets` branch,
+    embed the `raw.githubusercontent.com` URL) is **not yet verified to render** in a real issue and
+    accumulates images with no cleanup. `html2canvas` capture is lossy (no frosted nav / cross-origin
+    images / imperfect SVG board). Verify the render and decide on cleanup before relying on it.
+  - **Decide on the built backend** before cutting v0.1.0: leave it dormant in the release, or revert
+    `b60acd2` to keep the release clean (the design is preserved here + in `docs/decisions.md`).
 
 ## The short answer: what actually blocks starting
 

@@ -3,6 +3,142 @@
 Non-obvious decisions made during execution, **newest at top**. Upfront scoping decisions live
 in `docs/decisions-needed.md`; this log captures choices made while building.
 
+## 2026-06-28: Release tooling adoption (prompt 47)
+
+### Canonical version source — root `package.json` "version" (bare semver)
+
+`package.json` `"version"` at the monorepo root is the single source of truth. Stored bare
+(`0.1.0`, no `v` prefix) per the `release-prep-and-cut` standard. The three workspace
+`package.json`s (`backend/`, `frontend/`, `packages/contract/`) are kept in sync manually at
+each `/release-prep` bump — the command updates all four in one step.
+
+Rejected alternatives: a separate `VERSION` file (extra file with no ecosystem tooling benefit)
+and embedding the version in a TypeScript constant (hardcodes a second copy that diverges).
+
+### In-app version display — dual approach (backend endpoint + build-time constant)
+
+**Backend:** `VersionService` reads the backend's own `package.json` at runtime (two-candidate
+path resolution: `dist/../package.json` in prod, `src/version/../../package.json` in ts-jest).
+Exposed at `GET /api/version` as `{ version: string }` — public endpoint, no auth guard,
+consistent with the health endpoint pattern. Provides a live machine-readable source of truth.
+
+**Frontend:** `__APP_VERSION__` is injected at build/test time by Vite's `define` from
+`frontend/package.json` (which stays in sync with root). Zero runtime overhead, no extra API
+call. Rendered as a subtle `v{version}` text in the AppShell page footer. Declared in
+`frontend/src/vite-env.d.ts`.
+
+Rejected: fetching from the backend `/api/version` at runtime in the frontend — adds a
+network dependency and state management for a display-only concern. The build-time constant is
+sufficient since a version bump always triggers a rebuild.
+
+### Release commands installed in `.claude/commands/`
+
+`/release-prep` and `/release-cut` installed as `.claude/commands/release-prep.md` and
+`.claude/commands/release-cut.md` with all template placeholders filled for this project.
+The `CLAUDE-snippet.md` is pasted verbatim into `CLAUDE.md` with the gitea URL de-linked
+(standard referenced by name + version: `crzynet/homelab-configs standards/release-prep-and-cut
+@ v1.1.0`) — the repo is public and gitea is retired.
+
+## 2026-06-28: In-app "Give feedback → GitHub issue" feature design (prompt 45, plan only)
+
+Design pass for the v0.1.0 feedback feature: a global button captures an html2canvas
+screenshot + a note, always saves it to an in-app admin inbox, and best-effort files a public
+GitHub issue (with the screenshot embedded) in `crzykidd/game-ledger`. No code written in this
+prompt — decisions below drive the build prompts 46 (backend) and 47 (frontend).
+
+**1. Screenshot → GitHub issue mechanism — Contents API to a dedicated asset branch.**
+GitHub's REST API has no public "attach image to issue" endpoint (the web UI uses a private
+`uploads.github.com` route). Chosen approach, all over the public REST API with native `fetch`
+(Node 24 → no HTTP dep, no Octokit):
+  1. Ensure the asset branch exists (one-time, lazy): `GET /repos/{o}/{r}/git/ref/heads/{base}`
+     for the base sha, then `POST /repos/{o}/{r}/git/refs` with
+     `{ ref: "refs/heads/feedback-assets", sha }` (ignore 422 "already exists").
+  2. Upload the PNG: `PUT /repos/{o}/{r}/contents/feedback/{feedbackId}.png` with
+     `{ message, content: <base64>, branch: "feedback-assets" }`. The response's
+     `content.download_url` is the raw URL.
+  3. Create the issue: `POST /repos/{o}/{r}/issues` with the body embedding the raw URL as
+     `![screenshot](https://raw.githubusercontent.com/{o}/{r}/feedback-assets/feedback/{id}.png)`
+     plus reporter, route, module id+maturity, category, and the user's text.
+`raw.githubusercontent.com` images **do render** inline in issue markdown for public repos
+(must be verified live — see risks). The dedicated `feedback-assets` branch keeps `main`'s
+history clean. **Downside:** images accumulate on that branch with no cleanup (deferred to a
+nice-to-have pruning job). Rejected alternative: store the screenshot only in-app and link to
+it — a homelab app URL is not reachable by external issue viewers, so the image would 404 for
+maintainers.
+
+**2. GitHub auth + config storage — write-only fine-grained PAT in a settings singleton.**
+Reuse the maintenance settings *pattern* (singleton `upsert` row + audited update + SUPER_ADMIN
+guard + an AdminMaintenance-style page), but in a **new singleton table** rather than overloading
+`maintenance_settings` (feedback/integration config is semantically distinct). Fields:
+`githubEnabled`, `githubRepoOwner`, `githubRepoName`, `githubAssetBranch` (default
+`feedback-assets`), `githubToken`. The PAT is a **fine-grained token scoped to the one repo** with
+**Contents: read/write + Issues: read/write**. Storage rules: the token column is **write-only —
+never serialized in any API response**; GET returns a derived `githubTokenSet: boolean` instead.
+Only **SUPER_ADMIN** may write the config (matches the restore-endpoint precedent). Token stored
+as a plaintext column for now (it must be usable, so it cannot be hashed like session tokens);
+optional encryption-at-rest via an env key is a documented hardening follow-up, not a 0.1.0
+blocker. **Unconfigured / disabled / GitHub unreachable → feedback still saves in-app; no issue is
+created and the save still returns 200** (best-effort, never fails the save).
+
+**3. Data model — new `Feedback` table; screenshot as an in-DB `Bytes` blob.**
+`Feedback`: `id` (cuid), `reporterUserId` (FK User), `route` (string), `moduleKey` (nullable),
+`moduleMaturity` (nullable, auto-tagged), `category` (enum: bug | enhancement | question),
+`text`, `screenshot` (`Bytes`, nullable), `screenshotMime`, `githubIssueUrl` (nullable),
+`githubIssueNumber` (nullable Int), `status` (enum: OPEN | CLOSED, default OPEN), `createdAt`.
+Screenshot stored **in-DB as `Bytes`** (not filesystem / not the backup dir): self-contained,
+captured by `pg_dump` backups, no new volume mount, no path-traversal surface. Capped at ~2 MB
+(client downscales; server rejects oversize). **Excluded from `MaintenanceService.exportAll`** so
+the JSON export stays lean (blobs would bloat it). Filesystem storage is the documented scale-up
+path. **Migration:** one new migration adding the `Feedback` table + the settings singleton +
+two enums.
+
+**4. API surface.**
+  - `POST /api/feedback` — any logged-in user (AuthGuard + CsrfGuard), throttled. Body carries
+    category, text, route, optional moduleKey/maturity, and the screenshot (base64 PNG in JSON,
+    capped). Stores the row, then **best-effort** issue creation in a try/catch that logs and
+    swallows failures. Returns `{ id, githubIssueUrl | null }`.
+  - `GET /api/admin/feedback` (list) and `GET /api/admin/feedback/:id` (detail) — gated on
+    `VIEW_ALL` (admins).
+  - `GET /api/admin/feedback/:id/screenshot` — streams the PNG (admins).
+  - `PATCH /api/admin/feedback/:id` — set status OPEN/CLOSED (admins).
+  - `GET /api/feedback/settings` (returns config minus token, with `githubTokenSet`) and
+    `PUT /api/feedback/settings` (SUPER_ADMIN) — modeled on the maintenance settings endpoints.
+
+**5. Frontend.** A floating "Give feedback" button in `AppShell` (fixed bottom-right, all pages,
+logged-in only). On click: **lazy-`import()` html2canvas** (keeps it out of the main bundle),
+capture `#root`, render a modal with a screenshot **preview thumbnail**, category select, a
+textarea, and a clear **"this will be posted publicly to GitHub and the screenshot may contain
+on-screen data"** warning. Auto-tag `route` (from `useLocation`) and, on a `/play/:id` page, the
+game's `moduleKey` + maturity. Submit → `POST /api/feedback`. New admin **"Feedback" tab**
+(`ADMIN_TABS` + a `/admin/feedback` nested route, gated on `VIEW_ALL`): inbox list → detail with
+the rendered screenshot, the text, and a link to the GitHub issue. **New dep:** `html2canvas`
+(~40 KB gzip) — lazy-loaded so it doesn't grow the initial bundle. Known limits accepted: it
+skips cross-origin images without CORS, doesn't capture CSS `backdrop-filter` (the frosted nav),
+and may imperfectly render the SVG cribbage board — best-effort screenshot, not pixel-perfect.
+
+**6. Security / abuse.** PAT is write-only + SUPER_ADMIN-only (above). `POST /api/feedback` gets a
+dedicated `@Throttle` (≈5/min/user). Screenshot size capped (~2 MB) client- and server-side.
+Only authenticated (invite-only, trusted) users can submit. **Public-exposure callout:** the
+GitHub issue and its screenshot are publicly visible — the modal makes this explicit and shows the
+exact screenshot before sending; the in-app save is always private regardless. The user opts in by
+clicking, so nothing is auto-redacted.
+
+**7. 0.1.0 cut line.** **In:** Feedback model + migration; `POST /api/feedback` with in-app save +
+in-DB screenshot; AppShell button + html2canvas modal; admin inbox (list + screenshot view);
+SUPER_ADMIN GitHub settings (write-only PAT, repo, branch); best-effort issue creation with the
+embedded screenshot via the Contents-API/asset-branch flow; public-visibility warning; rate limit
++ size cap. **Deferred (nice-to-have):** category→GitHub-label mapping, issue dedup, status sync
+back from GitHub, screenshot redaction tools, asset-branch cleanup/pruning, PAT encryption at rest,
+filesystem screenshot storage for scale.
+
+**Build split.** `46-feedback-backend` (sonnet): contract types, Prisma migration, `FeedbackModule`
+(settings service, GitHub service via native fetch, feedback service, controller), throttling,
+unit tests. `47-feedback-frontend` (sonnet): AppShell button, lazy html2canvas capture + modal,
+api-client funcs, admin Feedback tab/route/inbox, SUPER_ADMIN GitHub settings section, tests; adds
+the `html2canvas` dep. Order: 46 → 47 (frontend needs the API + contract types). A live
+verification against the real public repo (confirm the screenshot renders in an actual issue) is a
+required acceptance step folded into 47.
+
 ## 2026-06-28: GitHub Actions CI + ghcr.io publish workflows (prompt 44)
 
 Authored `.github/workflows/ci.yml` (7 required PR checks) and `.github/workflows/publish.yml`

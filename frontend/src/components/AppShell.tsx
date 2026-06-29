@@ -22,6 +22,7 @@ import { useAuth } from '../auth/AuthContext';
 import { Permission, ThemePref } from '@game-ledger/contract';
 import { Avatar, AvatarFallback } from './ui/Avatar';
 import { cn } from './ui/utils';
+import { VersionBadge } from './VersionBadge';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -311,6 +312,10 @@ export function AppShell({ children, navItems }: AppShellProps) {
       <TopNav navItems={navItems ?? defaultNavItems} />
       {/* pt-14 clears the fixed 56px header */}
       <div className="pt-14">{children}</div>
+      {/* Subtle version indicator — bottom of every page */}
+      <footer className="flex justify-center py-3">
+        <VersionBadge />
+      </footer>
     </div>
   );
 }
