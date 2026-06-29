@@ -1,4 +1,4 @@
-FROM node:24-alpine AS builder
+FROM node:24.18.0-alpine AS builder
 WORKDIR /app
 
 # Install pnpm
@@ -24,7 +24,7 @@ RUN cd backend && npx prisma generate
 RUN pnpm --filter @game-ledger/contract build
 RUN pnpm --filter @game-ledger/backend build
 
-FROM node:24-alpine AS runner
+FROM node:24.18.0-alpine AS runner
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 # openssl: provides the binary Prisma probes to detect the OpenSSL version so it
